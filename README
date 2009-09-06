@@ -1,0 +1,8 @@
+Logic
+
+Just playing around with Logic and boolean minimization for now...
+
+This code is in OCaml.  To compile:
+
+ocamlc -o logic logic.ml
+
