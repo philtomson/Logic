@@ -6,3 +6,9 @@ This code is in OCaml.  To compile:
 
 ocamlc -o logic logic.ml
 
+OR (to add oUnit): 
+
+ocamlfind ocamlc -o logic -linkpkg -package oUnit logic.ml
+
+Now that I've added tests it's better to build with omake (you'll need to install omake if you don't have it installed).  An OMakefile has been added to the project.
+
