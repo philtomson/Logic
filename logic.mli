@@ -25,3 +25,8 @@
     val eval : bexp -> (string, boolean) Hashtbl.t -> boolean
     val literal_count : bexp -> int
     val op_count : bexp -> int
+    val mk_and : bexp ->bexp ->bexp
+    val mk_or :  bexp ->bexp ->bexp
+    val mk_xor : bexp ->bexp ->bexp
+    val mk_not : bexp ->bexp
+

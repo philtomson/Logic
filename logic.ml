@@ -155,6 +155,14 @@ module Logic :
     | And(x,y) | Or(x,y) | Xor(x,y) -> Printf.printf "And/Or/Xor\n";(1 + (count_ops x oc) + (count_ops y oc)) in
       count_ops exp 0 
     ;;
+
+let mk_and a b = And(a,b) ;;
+let mk_or  a b = Or(a,b)  ;;
+let mk_xor a b = Xor(a,b) ;;
+let mk_not a   = Not(a)   ;;
+let mk_var v   = Var(v)   ;; (* v has to be a string *)
+let mk_const c = Const(c) ;; (* c has to be a boolean *)
+
 (*
 
 end ;;

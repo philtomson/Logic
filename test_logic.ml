@@ -43,7 +43,7 @@ let x_and_y = And( z, Or((Not(z)),And(x,y))) ;;
 printf "num ops: %d\n" (op_count x_and_y) ;;
 
   
-let rec iter_ttbl lst op = match lst with 
+let rec iter_bop_ttbl lst op = match lst with  (* test binary operators *)
     [] -> ()
   | x::xs -> 
     (
@@ -51,12 +51,24 @@ let rec iter_ttbl lst op = match lst with
       let res = snd x in
       let i1  = fst ins in
       let i2  = snd ins in
-      let expr = op i1 i2 (*(Const i1, Const i2)*) in
-      assert_equal  (expr) (res) );  iter_ttbl xs op ; ()  ;;
+      let expr = op (Const i1) (Const i2) in
+      assert_equal  (eval expr my_env) (res) );  iter_bop_ttbl xs op ; ()  ;;
+
+let test_not _ =
+  assert_equal ( eval (Not(Const T)) my_env) F ;
+  assert_equal ( eval (Not(Const F)) my_env) T ;;
 
 let test_and _ = 
   let inputs = [((F,F),F);((F,T),F);((T,F),F);((T,T),T)] in
-  iter_ttbl inputs and_ ;;
+  iter_bop_ttbl inputs mk_and ;;
+
+let test_or _ = 
+  let inputs = [((F,F),F);((F,T),T);((T,F),T);((T,T),T)] in
+  iter_bop_ttbl inputs mk_or ;;
+
+let test_xor _ = 
+  let inputs = [((F,F),F);((F,T),T);((T,F),T);((T,T),F)] in
+  iter_bop_ttbl inputs mk_xor ;;
 
 (*
   let rec iter lst = match lst with
@@ -97,7 +109,10 @@ let suite = "Logic test suite" >::: [
              "test_construct" >:: test_construct;
              "test_expr_to_str" >:: test_expr_to_str;
              "test_reduce"      >:: test_reduce;
+             "test_not"         >:: test_not;
              "test_and"         >:: test_and;
+             "test_or"          >:: test_or;
+             "test_xor"         >:: test_xor;
              "test_demorganize" >:: test_demorganize                               ] ;;
 
 let _ =
