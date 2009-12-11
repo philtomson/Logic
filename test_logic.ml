@@ -9,6 +9,7 @@ let my_env = Hashtbl.create 225;;
 let expr = Xor(Const(F),Const(T));;
 
 printf "%s\n" ( expr_to_str expr );;
+Random.self_init  ;;
 
 let expr2 = And(expr,Not(Const(F)));;
 printf "%s\n" ( expr_to_str expr2 );;
@@ -59,15 +60,24 @@ let test_not _ =
   assert_equal ( eval (Not(Const F)) my_env) T ;;
 
 let test_and _ = 
-  let inputs = [((F,F),F);((F,T),F);((T,F),F);((T,T),T)] in
+  let inputs = [((F,F),F);
+                ((F,T),F);
+                ((T,F),F);
+                ((T,T),T)] in
   iter_bop_ttbl inputs mk_and ;;
 
 let test_or _ = 
-  let inputs = [((F,F),F);((F,T),T);((T,F),T);((T,T),T)] in
+  let inputs = [((F,F),F);
+                ((F,T),T);
+                ((T,F),T);
+                ((T,T),T)] in
   iter_bop_ttbl inputs mk_or ;;
 
 let test_xor _ = 
-  let inputs = [((F,F),F);((F,T),T);((T,F),T);((T,T),F)] in
+  let inputs = [((F,F),F);
+                ((F,T),T);
+                ((T,F),T);
+                ((T,T),F)] in
   iter_bop_ttbl inputs mk_xor ;;
 
 (*
@@ -83,7 +93,6 @@ let test_xor _ =
       assert_equal (eval expr my_env) res );  iter xs ; ()  in
   iter inputs ;;
   *)
-
 
 
 let test_op_count _ = 
@@ -104,6 +113,32 @@ let test_demorganize _ =
   assert_equal (not_x_and_not_y) (demorganize ( demorganize not_x_and_not_y));;
   (*assert_equal (demorganize not_x_or_y) (Not (Or (Var "x", Var "y")))*)
   (*assert_equal (demorganize not_x_or_y) (Not( Or(x, y))) ;;*)
+
+let inputs = [Var "a"; Var "b"; Var "c"; Var "d"; Var "e"];;
+
+let op_tree = make_tree_from_list inputs;;
+printf "op_tree: \n%s\n" ( (expr_to_str ( op_tree))) ;;
+let op_tree1 = grow_rand_tree 6 inputs  ;;
+printf "op_tree1: \n%s\n" ( (expr_to_str ( op_tree1))) ;;
+printf "mutated op_tree1:\n %s\n" (( expr_to_str ( mutate_with_prob' op_tree1 inputs 0.1)));;
+Random.self_init ;;
+let op_tree_inputs = get_inputs op_tree ;;
+let _ = List.iter ( fun x -> (Printf.printf "Input: %s\n" (expr_to_str x)); () ) op_tree_inputs ;;
+let parent1,pruned_tree = (cross op_tree op_tree1) ;;
+printf "Parent1 (from op_tree): \n%s\n" (( expr_to_str parent1)) ;;
+printf "crossed op_tree1: \n%s\n" (( expr_to_str pruned_tree)) ;;
+printf "op_tree1 depth is: %d\n" (op_count op_tree1 ) ;;
+
+count_bin [F;F;F;F] ( fun lst -> print_bool_lst lst ) ;;
+                         
+
+
+let op_tree2 = grow_rand_tree 1 inputs  ;;
+printf "op_tree2: \n%s\n" ( (expr_to_str ( op_tree2))) ;;
+Random.self_init ;;
+let op_tree3 = grow_rand_tree 2 inputs  ;;
+printf "op_tree3: \n%s\n" ( (expr_to_str ( op_tree3))) ;;
+
 
 let suite = "Logic test suite" >::: [
              "test_construct" >:: test_construct;
