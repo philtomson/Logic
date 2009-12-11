@@ -2,8 +2,8 @@ open Logic;;
 open Printf;;
 open OUnit ;;
 (*
-let x = Var("x", Some(F)) ;;
-let y = Var("y", Some(T));;
+let x = Inp("x", Some(F)) ;;
+let y = Inp("y", Some(T));;
 *)
 let my_env = Hashtbl.create 225;;
 let expr = Xor(Const(F),Const(T));;
@@ -34,9 +34,9 @@ let test_reduce _ =
   assert_equal (Const T) reduced_exp ;
   assert_equal (Const T) reduced_anded ;;
 
-let y = Var("y") ;;
-let x = Var("x") ;;
-let z = Var("z") ;;
+let y = Inp("y") ;;
+let x = Inp("x") ;;
+let z = Inp("z") ;;
 Hashtbl.add my_env "y" F ;;
 Hashtbl.add my_env "x" F ;;
 Hashtbl.add my_env "z" T ;;
@@ -111,10 +111,10 @@ let test_demorganize _ =
   let not_x_or_y = demorganize not_x_and_not_y in
   assert_equal (demorganize not_x_or_y) (And ( Not x, Not y));
   assert_equal (not_x_and_not_y) (demorganize ( demorganize not_x_and_not_y));;
-  (*assert_equal (demorganize not_x_or_y) (Not (Or (Var "x", Var "y")))*)
+  (*assert_equal (demorganize not_x_or_y) (Not (Or (Inp "x", Inp "y")))*)
   (*assert_equal (demorganize not_x_or_y) (Not( Or(x, y))) ;;*)
 
-let inputs = [Var "a"; Var "b"; Var "c"; Var "d"; Var "e"];;
+let inputs = [Inp "a"; Inp "b"; Inp "c"; Inp "d"; Inp "e"];;
 
 let op_tree = make_tree_from_list inputs;;
 printf "op_tree: \n%s\n" ( (expr_to_str ( op_tree))) ;;

@@ -1,4 +1,4 @@
-  exception VarNotDefined ;;
+  exception InpNotDefined ;;
   type boolean = T | F ;;
   type variable = Name of string | NameVal of string*boolean ;;
   type 'a optional  = Some of 'a | None ;;
@@ -16,7 +16,7 @@
     | x::xs -> (Printf.printf "%s " (b_to_s x)); print_bool_lst xs ;;
 
   type  bexp = Const of boolean 
-    |  Var of string  (* TODO: perhaps rename Var to Input *)
+    |  Inp of string  
     |  And of bexp * bexp
     |  Or  of bexp * bexp
     |  Not of bexp
@@ -53,42 +53,42 @@
     | Xor(x,y)    ->  " (" ^ (expr_to_str x) ^ " ^ " ^ 
                              (expr_to_str y) ^ ") "
     | Not(x)      ->  " !"^  (expr_to_str x) ^ " " 
-    | Var(x)      ->  " " ^ x ^ " "
+    | Inp(x)      ->  " " ^ x ^ " "
 
   let rec reduce exp = 
      match exp with
       Const x                -> exp
-    | Var x                  -> exp 
+    | Inp x                  -> exp 
     | Not(Const F)           -> Const T
     | Not(Const T)           -> Const F
-    | Not(Var x)             -> exp 
-    | Not(Not(Var x))        -> (Var x) 
+    | Not(Inp x)             -> exp 
+    | Not(Not(Inp x))        -> (Inp x) 
     | Not(x)                 -> (reduce (Not(reduce x)))
     | And(x,y) when x = y    -> (reduce x)
     | And(Const T, Const T)  -> Const T
     | And(Const F, _) | And(_, Const F)               -> Const F
-    | And(Var x, Var y)      -> exp
-    | And( Not(Var x),  y)   -> And(Not(Var x), reduce y)
-    | And( x, Not(Var y))    -> And(reduce x, Not(Var y))
-    | And(Var x, y)          -> And(Var x, reduce y)
-    | And( x, Var y)         -> And(reduce x, Var y)
+    | And(Inp x, Inp y)      -> exp
+    | And( Not(Inp x),  y)   -> And(Not(Inp x), reduce y)
+    | And( x, Not(Inp y))    -> And(reduce x, Not(Inp y))
+    | And(Inp x, y)          -> And(Inp x, reduce y)
+    | And( x, Inp y)         -> And(reduce x, Inp y)
     | And(x,y)               -> (*Printf.printf "reduce: And(x,y): \n";*) (reduce(And(reduce x,reduce y)))
     | Or(x,y)  when x=y      -> (reduce x)
     | Or(Const T ,_) | Or(_,Const T)                  -> Const T
     | Or(Const F, Const F)                            -> Const F
-    | Or(Var x, Var y)       -> exp
-    | Or( Not(Var x),  y)    -> Or(Not(Var x), reduce y)
-    | Or( x, Not(Var y))     -> Or(reduce x, Not(Var y))
-    | Or(Var x, y)           -> Or(Var x, reduce y)
-    | Or( x, Var y)          -> Or(reduce x, Var y)
+    | Or(Inp x, Inp y)       -> exp
+    | Or( Not(Inp x),  y)    -> Or(Not(Inp x), reduce y)
+    | Or( x, Not(Inp y))     -> Or(reduce x, Not(Inp y))
+    | Or(Inp x, y)           -> Or(Inp x, reduce y)
+    | Or( x, Inp y)          -> Or(reduce x, Inp y)
     | Or(x,y)                -> (reduce (Or(reduce x,reduce y)))
     | Xor(Const T,Const T) | Xor(Const F ,Const F)    -> Const F
     | Xor(Const T,Const F) | Xor(Const F, Const T)    -> Const T 
-    | Xor(Var x, Var y)      -> exp
-    | Xor( Not(Var x),  y)   -> Xor(Not(Var x), reduce y)
-    | Xor( x, Not(Var y))    -> Xor(reduce x, Not(Var y))
-    | Xor(Var x, y)          -> Xor(Var x, reduce y)
-    | Xor( x, Var y)         -> Xor(reduce x, Var y)
+    | Xor(Inp x, Inp y)      -> exp
+    | Xor( Not(Inp x),  y)   -> Xor(Not(Inp x), reduce y)
+    | Xor( x, Not(Inp y))    -> Xor(reduce x, Not(Inp y))
+    | Xor(Inp x, y)          -> Xor(Inp x, reduce y)
+    | Xor( x, Inp y)         -> Xor(reduce x, Inp y)
     | Xor(x,y)  -> (reduce (Xor(reduce x, reduce y)))
 
       ;;
@@ -106,17 +106,17 @@
     | Or(x,y)     -> ( eval x env) +: ( eval y env)
     | Not(x)      -> n (eval x env) 
     | Xor(x,y)    -> xor (eval x env) (eval y env) 
-    | Var(x)      -> (Hashtbl.find env x)   ;;
+    | Inp(x)      -> (Hashtbl.find env x)   ;;
 
   let rec get_inputs exp = match exp with 
       Const x     -> []
-    | Var x       -> [exp]
+    | Inp x       -> [exp]
     | And(x,y) | Or(x,y) | Xor(x,y) -> (get_inputs x) @ (get_inputs y)
     | Not x       -> get_inputs x ;;
 
   let rec literal_count exp = 
     let rec count_literals exp' lc = match exp' with
-    | Var(x)   -> 1
+    | Inp(x)   -> 1
     | Const(x) -> 0
     | And(x,y) | Or(x,y) | Xor(x,y) -> (lc + ( count_literals x lc) + ( count_literals y lc) ) 
     | Not(x)   -> (lc + ( count_literals x lc)) in 
@@ -124,7 +124,7 @@
 
   let rec op_count exp = 
     let rec count_ops exp' oc = match exp' with
-    | Var(_) | Const(_) ->  0
+    | Inp(_) | Const(_) ->  0
     | Not(x) ->  0 (*( count_ops x oc) not counting Not as op*)
     | And(x,y) | Or(x,y) | Xor(x,y) -> (1 + (count_ops x oc) + (count_ops y oc)) in
       count_ops exp 0 
@@ -135,7 +135,7 @@ let mk_and a b = And(a,b) ;;
 let mk_or  a b = Or(a,b)  ;;
 let mk_xor a b = Xor(a,b) ;;
 let mk_not a   = Not(a)   ;;
-let mk_var v   = Var(v)   ;; (* v has to be a string *)
+let mk_var v   = Inp(v)   ;; (* v has to be a string *)
 let mk_const c = Const(c) ;; (* c has to be a boolean *)
 
 (*
@@ -144,13 +144,13 @@ let deconstruct_bexp exp = match exp with
   | Or(_,_)  -> mk_or
   | Xor(_,_) -> mk_xor
   | Not(_)   -> mk_not
-  | Var(_)   -> mk_var
+  | Inp(_)   -> mk_var
   | Const(_) -> mk_const ;;
 *)
   
 (*
 let get_var_str exp = match exp with 
-    (Var s) -> s 
+    (Inp s) -> s 
   | Xor(_,_) | Not _ | Or(_,_) | And(_,_) -> "" (*maybe we should raise exception here?*)
   | Const _ -> "" ;;
 *)
@@ -175,7 +175,7 @@ let do_with_prob' exp inputs prob  =
            func a b
       )
     |  Not(x) -> get_random_input inputs 
-    |  Var(x) -> mk_not exp
+    |  Inp(x) -> mk_not exp
     |  Const(x) -> mk_not exp
     )
   else
@@ -191,7 +191,7 @@ let rec mutate_with_prob' exp inputs prob  =
            func (mutate_with_prob' a inputs prob) 
                 (mutate_with_prob' b inputs prob)
          else (match exp with
-             Not(_) | Const(_) | Var(_) -> exp
+             Not(_) | Const(_) | Inp(_) -> exp
            | And(a,b) -> And( (mutate_with_prob' a inputs prob),
                               (mutate_with_prob' b inputs prob) )
            | Or(a,b)  -> Or( (mutate_with_prob' a inputs prob),
@@ -207,7 +207,7 @@ let rec mutate_with_prob' exp inputs prob  =
                      get_random_input inputs  (*could overly prune exp tree *)
                    else x (* else un-invert *)
                  else exp
-    |  Var(x) -> if rn < prob then 
+    |  Inp(x) -> if rn < prob then 
                    (*1/2 time get a new input, 1/2 time invert *) 
                    if (Random.float 1.0) > 0.5 then
                      get_random_input inputs  (*could overly prune exp tree *)
@@ -299,7 +299,7 @@ let grow_rand_tree height inputs =
     | Or(x,y)     -> ( eval x env) +: ( eval y env)
     | Not(x)      -> n (eval x env) 
     | Xor(x,y)    -> xor (eval x env) (eval y env) 
-    | Var(x)      -> (Hashtbl.find env x)   ;;
+    | Inp(x)      -> (Hashtbl.find env x)   ;;
 *)
 
 let list_by_pairs lst = 
@@ -336,7 +336,7 @@ let cross exp1 exp2 =
   (*| _ as n  when depth = n -> exp*)
   | _ -> match exp with
           Const(_) -> exp
-        | Var(_)   -> exp (*shouldn't we swap at this level too? *)
+        | Inp(_)   -> exp (*shouldn't we swap at this level too? *)
         | And(x,y) | Or(x,y) | Xor(x,y) -> if( Random.float 1.0) > 0.5 then
                                        goto_depth x (depth-1) 
                                      else
@@ -350,14 +350,14 @@ let cross exp1 exp2 =
                               if (!crossed)  then exp1 
                               else ( crossed := true; exp2)  in
   (*Problem with this scheme is that the first terminal we hit will always be 
-    the one that gets replaced, so most likely a Cosnst, Var *)
+    the one that gets replaced, so most likely a Cosnst, Inp *)
   
 
   let rec goto_depth_rep exp exp' depth = 
     match depth with
     0 -> (match exp with 
            Const _  -> select_exp exp exp' 
-         | Var _    -> select_exp exp exp' 
+         | Inp _    -> select_exp exp exp' 
          | Not x    -> Not(select_exp exp exp' )
          | And(x,y) -> select_exp exp exp' (*if(Random.float 1.0) > 0.5 then
                          And(exp',y)
@@ -371,7 +371,7 @@ let cross exp1 exp2 =
   | _ -> match exp with 
            Const _ -> exp 
          | Not x   -> (goto_depth_rep x exp' (depth-1)) 
-         | Var _   -> exp 
+         | Inp _   -> exp 
          | And(x,y)-> And( (goto_depth_rep x exp' (depth-1)),
                            (goto_depth_rep y exp' (depth-1)) )
          | Or(x,y) -> Or ( (goto_depth_rep x exp' (depth-1)),
