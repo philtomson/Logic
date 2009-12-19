@@ -106,13 +106,14 @@
     | Or(x,y)     -> ( eval x env) +: ( eval y env)
     | Not(x)      -> n (eval x env) 
     | Xor(x,y)    -> xor (eval x env) (eval y env) 
-    | Inp(x)      -> (Hashtbl.find env x)   ;;
+    | Inp(x)      -> env(exp) (*(Hashtbl.find env x)*)   ;;
 
   let rec get_inputs exp = match exp with 
       Const x     -> []
     | Inp x       -> [exp]
     | And(x,y) | Or(x,y) | Xor(x,y) -> (get_inputs x) @ (get_inputs y)
     | Not x       -> get_inputs x ;;
+ 
 
   let rec literal_count exp = 
     let rec count_literals exp' lc = match exp' with
@@ -399,3 +400,17 @@ let rec count_bin lst f =
     count lst max_count ;;
 
   
+let rec eval_all_inputs exp subfn v ins  =  match ins with
+    [] -> subfn v
+  | i::inps -> let v' t q = if q = i then t else v(q) in
+               (eval_all_inputs exp subfn (v' F) inps)  *: 
+               (eval_all_inputs exp subfn (v' T) inps)  ;;
+
+let rec do_exp_eval exp = 
+  let inps = get_inputs exp in
+  let _ = List.iter ( fun x -> Printf.printf "Inp: %s\n" (expr_to_str x)) inps in
+  let do_assign v = 
+    (*let lis = List.map (fun x -> b_to_s(v x)) inps *)
+    let ans = (eval exp v ) in
+    (Printf.printf "Ans: %s\n" (b_to_s ans));T in
+  eval_all_inputs exp do_assign (fun x -> F) inps ;;

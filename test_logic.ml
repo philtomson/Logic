@@ -53,11 +53,11 @@ let rec iter_bop_ttbl lst op = match lst with  (* test binary operators *)
       let i1  = fst ins in
       let i2  = snd ins in
       let expr = op (Const i1) (Const i2) in
-      assert_equal  (eval expr my_env) (res) );  iter_bop_ttbl xs op ; ()  ;;
+      assert_equal  (eval expr (fun x -> F) ) (res) );  iter_bop_ttbl xs op ; ()  ;;
 
 let test_not _ =
-  assert_equal ( eval (Not(Const T)) my_env) F ;
-  assert_equal ( eval (Not(Const F)) my_env) T ;;
+  assert_equal ( eval (Not(Const T)) (fun x -> F)) F ;
+  assert_equal ( eval (Not(Const F)) (fun x -> F)) T ;;
 
 let test_and _ = 
   let inputs = [((F,F),F);
@@ -131,6 +131,9 @@ printf "op_tree1 depth is: %d\n" (op_count op_tree1 ) ;;
 
 count_bin [F;F;F;F] ( fun lst -> print_bool_lst lst ) ;;
                          
+(**)
+do_exp_eval (And(Inp "A",Inp "B"));;
+(**)
 
 
 let op_tree2 = grow_rand_tree 1 inputs  ;;
