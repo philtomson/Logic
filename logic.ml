@@ -406,6 +406,7 @@ let rec eval_all_inputs exp subfn v ins  =  match ins with
                (eval_all_inputs exp subfn (v' F) inps)  *: 
                (eval_all_inputs exp subfn (v' T) inps)  ;;
 
+(* evaluate an expression will all input combinations*)
 let rec do_exp_eval exp = 
   let inps = get_inputs exp in
   let _ = List.iter ( fun x -> Printf.printf "Inp: %s\n" (expr_to_str x)) inps in
@@ -414,3 +415,23 @@ let rec do_exp_eval exp =
     let ans = (eval exp v ) in
     (Printf.printf "Ans: %s\n" (b_to_s ans));T in
   eval_all_inputs exp do_assign (fun x -> F) inps ;;
+
+let rec print_str_lst lst = match lst with
+    [] -> () (*Printf.printf "\n"*)
+  | x::xs -> Printf.printf "%s" x; print_str_lst xs ;;
+
+let rec do_exp_eval_comp exp   = 
+  let inps = get_inputs exp in
+  let _ = List.iter ( fun x -> Printf.printf "Inp: %s\n" (expr_to_str x)) inps in
+  let do_assign v   = 
+    let lis = List.map (fun x -> b_to_s(v x)) inps  in
+    let ans = (eval exp v ) in
+    print_str_lst lis; (Printf.printf " | %s\n" (b_to_s ans));T in
+  eval_all_inputs exp do_assign (fun x -> F) inps ;;
+
+let rec create_truth_tabl lst = 
+  let tabl = Hashtbl.create 255  in
+  let rec iter lst' = match lst' with 
+     [] -> tabl
+   | x::xs -> (Hashtbl.add tabl (fst x) (snd x)) ; iter xs in
+  iter lst ;;

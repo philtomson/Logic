@@ -132,7 +132,7 @@ printf "op_tree1 depth is: %d\n" (op_count op_tree1 ) ;;
 count_bin [F;F;F;F] ( fun lst -> print_bool_lst lst ) ;;
                          
 (**)
-do_exp_eval (And(Inp "A",Inp "B"));;
+do_exp_eval_comp (And(Inp "A",Inp "B"));;
 (**)
 
 
