@@ -114,11 +114,12 @@ let test_demorganize _ =
   (*assert_equal (demorganize not_x_or_y) (Not (Or (Inp "x", Inp "y")))*)
   (*assert_equal (demorganize not_x_or_y) (Not( Or(x, y))) ;;*)
 
+
 let inputs = [Inp "a"; Inp "b"; Inp "c"; Inp "d"; Inp "e"];;
 
-let op_tree = make_tree_from_list inputs;;
+let op_tree = make_tree_from_list 5 ;;
 printf "op_tree: \n%s\n" ( (expr_to_str ( op_tree))) ;;
-let op_tree1 = grow_rand_tree 6 inputs  ;;
+let op_tree1 = grow_rand_tree 6 5  ;;
 printf "op_tree1: \n%s\n" ( (expr_to_str ( op_tree1))) ;;
 printf "mutated op_tree1:\n %s\n" (( expr_to_str ( mutate_with_prob' op_tree1 inputs 0.1)));;
 Random.self_init ;;
@@ -130,16 +131,37 @@ printf "crossed op_tree1: \n%s\n" (( expr_to_str pruned_tree)) ;;
 printf "op_tree1 depth is: %d\n" (op_count op_tree1 ) ;;
 
 count_bin [F;F;F;F] ( fun lst -> print_bool_lst lst ) ;;
-                         
+
+(* 
+let result = do_exp_eval_comp (And(Inp "B",Inp "A")) (create_truth_tabl 
+                                                           [([F;F],F);
+                                                            ([F;T],F);
+                                                            ([T;F],F);
+                                                            ([T;T],T) ] 
+                                                      );;
+*)
+
 (**)
-do_exp_eval_comp (And(Inp "A",Inp "B"));;
+let myexpr = (Xor(Inp "3",(And(Inp "1", Inp "2"))));;
+let result = do_exp_eval_comp myexpr (create_truth_tabl
+                                     [([F;F;F],F);
+                                      ([F;F;T],T);
+                                      ([F;T;F],F);
+                                      ([F;T;T],T);
+                                      ([T;F;F],F);
+                                      ([T;F;T],T);
+                                      ([T;T;F],T);
+                                      ([T;T;T],F) ] );;
+                                      (**)
+
+let _ = Printf.printf "mismatch count: %d\n" result ;;                                        
 (**)
 
 
-let op_tree2 = grow_rand_tree 1 inputs  ;;
+let op_tree2 = grow_rand_tree 1 (List.length inputs)  ;;
 printf "op_tree2: \n%s\n" ( (expr_to_str ( op_tree2))) ;;
 Random.self_init ;;
-let op_tree3 = grow_rand_tree 2 inputs  ;;
+let op_tree3 = grow_rand_tree 2 (List.length inputs)  ;;
 printf "op_tree3: \n%s\n" ( (expr_to_str ( op_tree3))) ;;
 
 

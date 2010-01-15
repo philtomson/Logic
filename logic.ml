@@ -3,6 +3,17 @@
   type variable = Name of string | NameVal of string*boolean ;;
   type 'a optional  = Some of 'a | None ;;
 
+  (*TODO: how to get this into the List namespace?*)
+  let uniqify lst = 
+    let rec uniq l1 l2 = match l1 with 
+      [] -> l2 
+    | x::xs -> if (List.mem x l2) then uniq xs l2
+               else uniq xs (x::l2)        in
+  uniq lst [] ;;
+
+
+  let log2 x = ceil (log x /. log 2.0) ;;
+
   let to_bool v = match v with 
       T -> true
     | F -> false ;;
@@ -53,7 +64,7 @@
     | Xor(x,y)    ->  " (" ^ (expr_to_str x) ^ " ^ " ^ 
                              (expr_to_str y) ^ ") "
     | Not(x)      ->  " !"^  (expr_to_str x) ^ " " 
-    | Inp(x)      ->  " " ^ x ^ " "
+    | Inp(x)      ->  " I" ^ x ^ " "
 
   let rec reduce exp = 
      match exp with
@@ -282,7 +293,14 @@ let rec rand_bin_op (a_exp, b_exp) = match (Random.int num_ops) with
   |  2  -> Xor(a_exp, b_exp) 
   |  _  -> And(a_exp, b_exp) ;;
 
-let grow_rand_tree height inputs = 
+ let rec make_inps_lst num =
+   let rec make_lst n lst = match n with 
+     0 -> lst
+   | _ -> make_lst (n-1) ((Inp (string_of_int n))::lst) in
+   make_lst num [] ;;
+
+let grow_rand_tree height inps = 
+  let inputs = make_inps_lst inps in
   let rec grow_tree h =
       match h with 
       0 -> (get_random_input inputs) (*Primary inputs at 0 level *)
@@ -292,6 +310,14 @@ let grow_rand_tree height inputs =
               | NEG -> func (grow_tree (h-1)) )
          | BinaryFunc(op,func) ->  func (grow_tree (h-1)) (grow_tree (h-1)) in
    grow_tree height ;;
+
+
+(* grow a tree  that's log2 #inputs high*)
+let grow_rand_tree_log2 inputs = 
+  let height = log2 (float_of_int  inputs) in
+  grow_rand_tree (int_of_float height) inputs ;;
+  
+  
 
 (*
   let rec eval exp env = match exp with
@@ -315,13 +341,16 @@ let rand_not exp = match Random.int 2 with
   | 1 -> Not exp
   | _ -> exp ;;
 
- let make_tree_from_list lst =
+
+
+ let make_tree_from_list inps =
+    let inps_lst = make_inps_lst inps in
     let rec make_ops l = match l with
        []        -> (Const F)
     |  a::b::[]  -> rand_bin_op(rand_not a, rand_not b) 
     |  a::b::xs  -> rand_bin_op(rand_bin_op(rand_not a, rand_not b), (make_ops xs) )
     |  c :: []   -> (rand_not c) in
-    make_ops lst ;;
+    make_ops inps_lst ;;
 
 
  let get_random_input lst = (List.nth lst (Random.int (List.length lst))) ;;
@@ -408,7 +437,7 @@ let rec eval_all_inputs exp subfn v ins  =  match ins with
 
 (* evaluate an expression will all input combinations*)
 let rec do_exp_eval exp = 
-  let inps = get_inputs exp in
+  let inps = uniqify(get_inputs exp) in
   let _ = List.iter ( fun x -> Printf.printf "Inp: %s\n" (expr_to_str x)) inps in
   let do_assign v = 
     (*let lis = List.map (fun x -> b_to_s(v x)) inps *)
@@ -420,14 +449,9 @@ let rec print_str_lst lst = match lst with
     [] -> () (*Printf.printf "\n"*)
   | x::xs -> Printf.printf "%s" x; print_str_lst xs ;;
 
-let rec do_exp_eval_comp exp   = 
-  let inps = get_inputs exp in
-  let _ = List.iter ( fun x -> Printf.printf "Inp: %s\n" (expr_to_str x)) inps in
-  let do_assign v   = 
-    let lis = List.map (fun x -> b_to_s(v x)) inps  in
-    let ans = (eval exp v ) in
-    print_str_lst lis; (Printf.printf " | %s\n" (b_to_s ans));T in
-  eval_all_inputs exp do_assign (fun x -> F) inps ;;
+let rec print_expr_lst lst = match lst with
+    [] -> () (*Printf.printf "\n"*)
+  | x::xs -> Printf.printf "%s" (expr_to_str x); print_expr_lst xs ;;
 
 let rec create_truth_tabl lst = 
   let tabl = Hashtbl.create 255  in
@@ -435,3 +459,24 @@ let rec create_truth_tabl lst =
      [] -> tabl
    | x::xs -> (Hashtbl.add tabl (fst x) (snd x)) ; iter xs in
   iter lst ;;
+
+(* evaluate the expression with every combination of inputs *)
+let  do_exp_eval_comp exp tabl  = 
+  (*let counter (cond,v) = if (cond = true) then (cond,v+1) else (cond,v) in*)
+  (*TODO: mutable STATE on following line: here be DRAGONS *)
+  let count = ref 0 in 
+  (*TODO: need to uniqify the inps from get_inputs *)
+  let inps = (List.sort (fun a b -> compare a b ) (uniqify (get_inputs exp))) in
+  let _ = List.iter ( fun x -> Printf.printf "Inp: %s\n" (expr_to_str x)) inps in
+  let do_assign v   = 
+    let lis = List.map (fun x -> (v x)) inps  in
+    let ans = (eval exp v ) in
+    let gold_ans = Hashtbl.find tabl lis in
+    let mismatch = not (ans = gold_ans) in
+    let _ = (if mismatch then (incr count) else () ) in
+    (Printf.printf " | %s %d\n" (b_to_s ans) !count );if !count = 0 then T  else F in
+  let _ = eval_all_inputs exp do_assign (fun x -> F) inps in
+  !count;;
+
+(*let rec do_gp max_iter inputs = match max_iter with *)
+
