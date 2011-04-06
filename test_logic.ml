@@ -6,15 +6,15 @@ let x = Var("x", Some(F)) ;;
 let y = Var("y", Some(T));;
 *)
 let my_env = Hashtbl.create 225;;
-let expr = Xor(Const(F),Const(T));;
+let expr = Bop(Xor,Const(F),Const(T));;
 
 printf "%s\n" ( expr_to_str expr );;
 Random.self_init  ;;
 
-let expr2 = And(expr,Not(Const(F)));;
+let expr2 = Bop(And, expr, Not(Const(F)));;
 printf "%s\n" ( expr_to_str expr2 );;
 let test_construct _ = 
-  assert_equal  (And(Xor(Const F, Const T), Not(Const F)))   expr2 ;;
+  assert_equal  (Bop(And,Bop(Xor, Const F, Const T), Not(Const F)))   expr2 ;;
 
 let test_expr_to_str _ =
   assert_equal " (F ^ T) " (expr_to_str expr) ;;
@@ -26,7 +26,7 @@ let reduced_exp = reduce expr2 ;;
 printf "%s\n" ( expr_to_str  reduced_exp) ;;
 
 
-let anded = And(expr,expr) ;;
+let anded = Bop(And,expr,expr) ;;
 let reduced_anded = (reduce anded) ;;
 printf "%s\n" ( expr_to_str reduced_anded) ;;
 
@@ -40,7 +40,7 @@ let z = Var("z") ;;
 Hashtbl.add my_env "y" F ;;
 Hashtbl.add my_env "x" F ;;
 Hashtbl.add my_env "z" T ;;
-let x_and_y = And( z, Or((Not(z)),And(x,y))) ;;
+let x_and_y = Bop(And, z, Bop(Or,(Not(z)),Bop(And,x,y))) ;;
 printf "num ops: %d\n" (op_count x_and_y) ;;
 
   
@@ -89,7 +89,7 @@ let test_xor _ =
       let res = snd x in
       let i1  = fst ins in
       let i2  = snd ins in
-      let expr = And(Const i1, Const i2) in
+      let expr = Bop(And,Const i1, Const i2) in
       assert_equal (eval expr my_env) res );  iter xs ; ()  in
   iter inputs ;;
   *)
@@ -102,17 +102,17 @@ let test_op_count _ =
 printf "value is: %s\n" ( b_to_s (eval x_and_y my_env) ) ;;
 printf "x_and_y is %s\n" ( expr_to_str ( reduce x_and_y )) ;;
 *)
-let not_x_and_not_y = And(Not x , Not y ) ;;
+let not_x_and_not_y = Bop(And,Not x , Not y ) ;;
 printf "demorganize not_x_and_not_y %s\n" ( expr_to_str (demorganize not_x_and_not_y )) ;;
-let count =   literal_count ( And(Const T,x_and_y) )  ;;
+let count =   literal_count ( Bop(And,Const T,x_and_y) )  ;;
 printf "%d\n" ( count ) ;; 
 (**)
 let test_demorganize _ = 
   let not_x_or_y = demorganize not_x_and_not_y in
-  assert_equal (demorganize not_x_or_y) (And ( Not x, Not y));
+  assert_equal (demorganize not_x_or_y) (Bop(And, Not x, Not y));
   assert_equal (not_x_and_not_y) (demorganize ( demorganize not_x_and_not_y));;
   (*assert_equal (demorganize not_x_or_y) (Not (Or (Var "x", Var "y")))*)
-  (*assert_equal (demorganize not_x_or_y) (Not( Or(x, y))) ;;*)
+  (*assert_equal (demorganize not_x_or_y) (Not( Bop(Or,x, y))) ;;*)
 
 let inputs = [Var "a"; Var "b"; Var "c"; Var "d"; Var "e"];;
 
@@ -120,7 +120,12 @@ let op_tree = make_tree_from_list inputs;;
 printf "op_tree: \n%s\n" ( (expr_to_str ( op_tree))) ;;
 let op_tree1 = grow_rand_tree 6 inputs  ;;
 printf "op_tree1: \n%s\n" ( (expr_to_str ( op_tree1))) ;;
+(***********************************************************
+ * for some reason this section of commented code throws the 
+ * following exception:
+ * Fatal error: exception Invalid_argument("Random.int")
 printf "mutated op_tree1:\n %s\n" (( expr_to_str ( mutate_with_prob' op_tree1 inputs 0.1)));;
+
 Random.self_init ;;
 let op_tree_inputs = get_inputs op_tree ;;
 let _ = List.iter ( fun x -> (Printf.printf "Input: %s\n" (expr_to_str x)); () ) op_tree_inputs ;;
@@ -128,6 +133,7 @@ let parent1,pruned_tree = (cross op_tree op_tree1) ;;
 printf "Parent1 (from op_tree): \n%s\n" (( expr_to_str parent1)) ;;
 printf "crossed op_tree1: \n%s\n" (( expr_to_str pruned_tree)) ;;
 printf "op_tree1 depth is: %d\n" (op_count op_tree1 ) ;;
+*************************************************************)
 
 count_bin [F;F;F;F] ( fun lst -> print_bool_lst lst ) ;;
                          

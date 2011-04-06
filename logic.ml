@@ -17,10 +17,9 @@
 
   type  bexp = Const of boolean 
     |  Var of string  (* TODO: perhaps rename Var to Input *)
-    |  And of bexp * bexp
-    |  Or  of bexp * bexp
+    |  Bop of bop * bexp * bexp
     |  Not of bexp
-    |  Xor of bexp * bexp
+  and bop = And | Or | Xor
     ;;
 
   let and_ x y = match x,y with
@@ -39,18 +38,24 @@
       (T, F) | (F, T) -> T
     | _ -> F;;
 
+  let bop_to_func op = match op with
+    | And -> and_
+    | Or  -> or_
+    | Xor -> xor 
+
   let ( *: ) x y =  and_ x y ;;
   let ( +: ) x y =  or_ x y ;;
   let ( ^: ) x y =  xor x y ;;
   let ( !: ) x   =  n x ;; 
 
+  let op_to_str op = match op with
+    | And -> " * "
+    | Or  -> " + "
+    | Xor -> " ^ " 
+
   let rec expr_to_str exp = match exp with
     | Const x     ->  (b_to_s x ) 
-    | And(x,y)    ->  " (" ^ (expr_to_str x) ^ " * " ^ 
-                             (expr_to_str y) ^ ") "
-    | Or(x,y)     ->  " (" ^ (expr_to_str x) ^ " + " ^ 
-                             (expr_to_str y) ^ ") "
-    | Xor(x,y)    ->  " (" ^ (expr_to_str x) ^ " ^ " ^ 
+    | Bop(op,x,y) ->  " (" ^ (expr_to_str x) ^ (op_to_str op) ^ 
                              (expr_to_str y) ^ ") "
     | Not(x)      ->  " !"^  (expr_to_str x) ^ " " 
     | Var(x)      ->  " " ^ x ^ " "
@@ -64,76 +69,62 @@
     | Not(Var x)             -> exp 
     | Not(Not(Var x))        -> (Var x) 
     | Not(x)                 -> (reduce (Not(reduce x)))
-    | And(x,y) when x = y    -> (reduce x)
-    | And(Const T, Const T)  -> Const T
-    | And(Const F, _) | And(_, Const F)               -> Const F
-    | And(Var x, Var y)      -> exp
-    | And( Not(Var x),  y)   -> And(Not(Var x), reduce y)
-    | And( x, Not(Var y))    -> And(reduce x, Not(Var y))
-    | And(Var x, y)          -> And(Var x, reduce y)
-    | And( x, Var y)         -> And(reduce x, Var y)
-    | And(x,y)               -> (*Printf.printf "reduce: And(x,y): \n";*) (reduce(And(reduce x,reduce y)))
-    | Or(x,y)  when x=y      -> (reduce x)
-    | Or(Const T ,_) | Or(_,Const T)                  -> Const T
-    | Or(Const F, Const F)                            -> Const F
-    | Or(Var x, Var y)       -> exp
-    | Or( Not(Var x),  y)    -> Or(Not(Var x), reduce y)
-    | Or( x, Not(Var y))     -> Or(reduce x, Not(Var y))
-    | Or(Var x, y)           -> Or(Var x, reduce y)
-    | Or( x, Var y)          -> Or(reduce x, Var y)
-    | Or(x,y)                -> (reduce (Or(reduce x,reduce y)))
-    | Xor(Const T,Const T) | Xor(Const F ,Const F)    -> Const F
-    | Xor(Const T,Const F) | Xor(Const F, Const T)    -> Const T 
-    | Xor(Var x, Var y)      -> exp
-    | Xor( Not(Var x),  y)   -> Xor(Not(Var x), reduce y)
-    | Xor( x, Not(Var y))    -> Xor(reduce x, Not(Var y))
-    | Xor(Var x, y)          -> Xor(Var x, reduce y)
-    | Xor( x, Var y)         -> Xor(reduce x, Var y)
-    | Xor(x,y)  -> (reduce (Xor(reduce x, reduce y)))
-
+    | Bop(And, x,y) when x = y  -> (reduce x)
+    | Bop(Or, x,y)  when x = y  -> (reduce x) 
+    | Bop(And, Const T, Const T)                  -> Const T
+    | Bop(And, Const F, _) | Bop(And, _, Const F) -> Const F
+    | Bop(Or,  Const T, _) | Bop(Or,  _, Const T) -> Const T
+    | Bop(Or,  Const F, Const F)                  -> Const F
+    | Bop(Xor, Const T,Const T) | Bop(Xor, Const F, Const F)  -> Const F
+    | Bop(Xor, Const T,Const F) | Bop(Xor, Const F, Const T)  -> Const T 
+    | Bop(_, Var x, Var y)   -> exp
+    | Bop(_ as op, Not(Var x),  y) -> Bop(op, Not(Var x), reduce y)
+    | Bop(_ as op, x, Not(Var y))  -> Bop(op, reduce x, Not(Var y))
+    | Bop(_ as op, Var x, y)       -> Bop(op, Var x, reduce y)
+    | Bop(_ as op, x, Var y)       -> Bop(op, reduce x, Var y)
+    | Bop(_ as op, x,y)            -> (reduce (Bop(op, reduce x,reduce y)))
       ;;
 
   let rec demorganize exp = match exp with 
-    | And(Not x, Not y)   -> Not( Or( x, y)) 
-    | Or( Not x, Not y)   -> Not( And( x, y)) 
-    | Not( Or(x,y) )      -> And(Not x, Not y)
-    | Not( And(x,y) )     -> Or(Not x, Not y)
+    | Bop(And, Not x, Not y)   -> Not(Bop(Or,  x, y)) 
+    | Bop(Or,  Not x, Not y)   -> Not(Bop(And, x, y)) 
+    | Not( Bop(Or, x,y) )      -> Bop(And, Not x, Not y)
+    | Not( Bop(And,x,y) )      -> Bop(Or, Not x, Not y)
     | _ -> exp ;;
+
 
   let rec eval exp env = match exp with
       Const x     -> x
-    | And( x,y)   -> ( eval x env) *: ( eval y env) 
-    | Or(x,y)     -> ( eval x env) +: ( eval y env)
+    | Bop(op,x,y) -> (bop_to_func op) ( eval x env) ( eval y env) 
     | Not(x)      -> n (eval x env) 
-    | Xor(x,y)    -> xor (eval x env) (eval y env) 
     | Var(x)      -> (Hashtbl.find env x)   ;;
 
   let rec get_inputs exp = match exp with 
       Const x     -> []
     | Var x       -> [exp]
-    | And(x,y) | Or(x,y) | Xor(x,y) -> (get_inputs x) @ (get_inputs y)
+    | Bop(_, x,y) -> (get_inputs x) @ (get_inputs y)
     | Not x       -> get_inputs x ;;
 
   let rec literal_count exp = 
     let rec count_literals exp' lc = match exp' with
-    | Var(x)   -> 1
-    | Const(x) -> 0
-    | And(x,y) | Or(x,y) | Xor(x,y) -> (lc + ( count_literals x lc) + ( count_literals y lc) ) 
-    | Not(x)   -> (lc + ( count_literals x lc)) in 
+    | Var(x)     -> 1
+    | Const(x)   -> 0
+    | Bop(_,x,y) -> (lc + ( count_literals x lc) + ( count_literals y lc) ) 
+    | Not(x)     -> (lc + ( count_literals x lc)) in 
       count_literals exp 0  ;;
 
   let rec op_count exp = 
     let rec count_ops exp' oc = match exp' with
     | Var(_) | Const(_) ->  0
-    | Not(x) ->  0 (*( count_ops x oc) not counting Not as op*)
-    | And(x,y) | Or(x,y) | Xor(x,y) -> (1 + (count_ops x oc) + (count_ops y oc)) in
+    | Not(x)     ->  0 (*( count_ops x oc) not counting Not as op*)
+    | Bop(_,x,y) -> (1 + (count_ops x oc) + (count_ops y oc)) in
       count_ops exp 0 
     ;;
 
 
-let mk_and a b = And(a,b) ;;
-let mk_or  a b = Or(a,b)  ;;
-let mk_xor a b = Xor(a,b) ;;
+let mk_and a b = Bop(And,a,b) ;;
+let mk_or  a b = Bop(Or,a,b)  ;;
+let mk_xor a b = Bop(Xor,a,b) ;;
 let mk_not a   = Not(a)   ;;
 let mk_var v   = Var(v)   ;; (* v has to be a string *)
 let mk_const c = Const(c) ;; (* c has to be a boolean *)
@@ -170,7 +161,7 @@ let do_with_prob' exp inputs prob  =
   let rn = Random.float 1.0 in
   if rn < prob then (
     match exp with 
-     And(a,b) | Or(a,b) | Xor(a,b) -> (
+     Bop(_,a,b)  -> (
        let func = ((choose_rand_bin_func ())) in
            func a b
       )
@@ -185,19 +176,15 @@ let rec mutate_with_prob' exp inputs prob  =
   let rn = Random.float 1.0 in
   let _ = (Printf.printf ">> rn is: %f\n" rn) in
     match exp with 
-     And(a,b) | Or(a,b) | Xor(a,b) -> ( (*funcs with arity 2*)
+     Bop(_,a,b)  -> ( (*funcs with arity 2*)
        let func = ((choose_rand_bin_func ())) in
          if rn < prob then
            func (mutate_with_prob' a inputs prob) 
                 (mutate_with_prob' b inputs prob)
          else (match exp with
              Not(_) | Const(_) | Var(_) -> exp
-           | And(a,b) -> And( (mutate_with_prob' a inputs prob),
-                              (mutate_with_prob' b inputs prob) )
-           | Or(a,b)  -> Or( (mutate_with_prob' a inputs prob),
-                             (mutate_with_prob' b inputs prob) )
-           | Xor(a,b) -> Xor( (mutate_with_prob' a inputs prob),
-                              (mutate_with_prob' b inputs prob) )
+           | Bop(_,a,b) -> Bop(And, (mutate_with_prob' a inputs prob),
+                                      (mutate_with_prob' b inputs prob))
          )
       )
     (*funcs with arity 1*)
@@ -223,12 +210,14 @@ let do_bin_with_prob f e1 e2 exp prob = if (Random.float 1.0) < prob then
 
 let num_ops = 3 ;;
 
+(*
 type bop = AND | OR | XOR  ;; (*P_I = Primary Input *)
+*)
 
 let bop_to_s op = match op with 
-    AND -> "AND "
-  | OR  -> "OR"
-  | XOR -> "XOR" ;;
+    And -> "AND "
+  | Or  -> "OR"
+  | Xor -> "XOR" ;;
 
 type uop = NEG | P_I ;;
 let uop_to_s op = match op with
@@ -251,9 +240,9 @@ type any_arity = UnaryFunc of unary_func | BinaryFunc of binary_func ;;
 let unary_operations =  [UnaryFunc(P_I,(fun x -> x)); (*make type system happy*)
                          UnaryFunc(NEG,mk_not)];;
 
-let binary_operations = [BinaryFunc(AND,mk_and);
-                         BinaryFunc(OR,mk_or);
-                         BinaryFunc(XOR,mk_xor) ] ;; 
+let binary_operations = [BinaryFunc(And,mk_and);
+                         BinaryFunc(Or,mk_or);
+                         BinaryFunc(Xor,mk_xor) ] ;; 
 
 (*
 let decon_op op = match op with
@@ -276,10 +265,10 @@ let choose_rand_unary_op _ =
 
 
 let rec rand_bin_op (a_exp, b_exp) = match (Random.int num_ops) with
-     0  -> And(a_exp, b_exp) 
-  |  1  -> Or(a_exp, b_exp)
-  |  2  -> Xor(a_exp, b_exp) 
-  |  _  -> And(a_exp, b_exp) ;;
+     0  -> Bop(And,a_exp, b_exp) 
+  |  1  -> Bop(Or, a_exp, b_exp)
+  |  2  -> Bop(Xor,a_exp, b_exp) 
+  |  _  -> Bop(And,a_exp, b_exp) ;;
 
 let grow_rand_tree height inputs = 
   let rec grow_tree h =
@@ -335,9 +324,9 @@ let cross exp1 exp2 =
     0 -> exp
   (*| _ as n  when depth = n -> exp*)
   | _ -> match exp with
-          Const(_) -> exp
-        | Var(_)   -> exp (*shouldn't we swap at this level too? *)
-        | And(x,y) | Or(x,y) | Xor(x,y) -> if( Random.float 1.0) > 0.5 then
+          Const(_)   -> exp
+        | Var(_)     -> exp (*shouldn't we swap at this level too? *)
+        | Bop(_,x,y) -> if( Random.float 1.0) > 0.5 then
                                        goto_depth x (depth-1) 
                                      else
                                        goto_depth y (depth-1)
@@ -359,25 +348,15 @@ let cross exp1 exp2 =
            Const _  -> select_exp exp exp' 
          | Var _    -> select_exp exp exp' 
          | Not x    -> Not(select_exp exp exp' )
-         | And(x,y) -> select_exp exp exp' (*if(Random.float 1.0) > 0.5 then
-                         And(exp',y)
-                       else And(x,exp') *)
-         | Or(x,y)  -> select_exp exp exp'  (*if(Random.float 1.0) > 0.5 then
-                         Or(exp',y)
-                       else Or(x,exp') *)
-         | Xor(x,y) -> select_exp exp exp'  (*if(Random.float 1.0) > 0.5 then
-                         Xor(exp',y)
-                       else Xor(x,exp') *) )
+         | Bop(_ ,x,y) -> select_exp exp exp' (*if(Random.float 1.0) > 0.5 then
+                         Bop(op,exp',y)
+                       else Bop(op,x,exp') *) )
   | _ -> match exp with 
            Const _ -> exp 
          | Not x   -> (goto_depth_rep x exp' (depth-1)) 
          | Var _   -> exp 
-         | And(x,y)-> And( (goto_depth_rep x exp' (depth-1)),
-                           (goto_depth_rep y exp' (depth-1)) )
-         | Or(x,y) -> Or ( (goto_depth_rep x exp' (depth-1)),
-                           (goto_depth_rep y exp' (depth-1)) )
-         | Xor(x,y)-> Xor( (goto_depth_rep x exp' (depth-1)),
-                           (goto_depth_rep y exp' (depth-1)) ) in
+         | Bop(_ as op,x,y)-> Bop(op, (goto_depth_rep x exp' (depth-1)),
+                                      (goto_depth_rep y exp' (depth-1))) in
 
   let exp1' = goto_depth exp1 cross_depth1 in
   let exp2' = goto_depth_rep exp2 exp1' cross_depth2 in
