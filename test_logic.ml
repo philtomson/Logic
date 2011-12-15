@@ -37,9 +37,16 @@ let test_reduce _ =
 let y = Var("y") ;;
 let x = Var("x") ;;
 let z = Var("z") ;;
-Hashtbl.add my_env "y" F ;;
-Hashtbl.add my_env "x" F ;;
-Hashtbl.add my_env "z" T ;;
+(*
+Hashtbl.add my_env y F ;;
+Hashtbl.add my_env x F ;;
+Hashtbl.add my_env z T ;;
+*)
+let _ = 
+  assign x F my_env ;
+  assign y F my_env ;
+  assign z T my_env ;;
+
 let x_and_y = Bop(And, z, Bop(Or,(Not(z)),Bop(And,x,y))) ;;
 printf "num ops: %d\n" (op_count x_and_y) ;;
 

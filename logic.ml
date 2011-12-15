@@ -93,11 +93,15 @@
     | _ -> exp ;;
 
 
+  let assign var v env = match var with
+      Var(string) as var' -> Hashtbl.add env var' v
+    | _ -> raise VarNotDefined ;;
+
   let rec eval exp env = match exp with
       Const x     -> x
     | Bop(op,x,y) -> (bop_to_func op) ( eval x env) ( eval y env) 
     | Not(x)      -> n (eval x env) 
-    | Var(x)      -> (Hashtbl.find env x)   ;;
+    | (Var(x)) as x'      -> (Hashtbl.find env x')   ;;
 
   let rec get_inputs exp = match exp with 
       Const x     -> []
