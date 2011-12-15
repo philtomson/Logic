@@ -1,4 +1,5 @@
   exception VarNotDefined ;;
+  exception NotAVariable ;;
   type boolean = T | F ;;
   type variable = Name of string | NameVal of string*boolean ;;
   type 'a optional  = Some of 'a | None ;;
@@ -94,8 +95,8 @@
 
 
   let assign var v env = match var with
-      Var(string) as var' -> Hashtbl.add env var' v
-    | _ -> raise VarNotDefined ;;
+      Var(x) as var' -> Hashtbl.add env var' v
+    | _ -> raise NotAVariable ;;
 
   let rec eval exp env = match exp with
       Const x     -> x

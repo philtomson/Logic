@@ -150,6 +150,7 @@ OCAMLCFLAGS   += -g
 
 FILES[] =
     logic
+    fsm
     test_logic
 #
 PROGRAM = test_logic

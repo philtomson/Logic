@@ -1,6 +1,8 @@
 open Logic;;
 open Printf;;
 open OUnit ;;
+open Fsm;;
+
 (*
 let x = Var("x", Some(F)) ;;
 let y = Var("y", Some(T));;
@@ -151,6 +153,31 @@ printf "op_tree2: \n%s\n" ( (expr_to_str ( op_tree2))) ;;
 Random.self_init ;;
 let op_tree3 = grow_rand_tree 2 inputs  ;;
 printf "op_tree3: \n%s\n" ( (expr_to_str ( op_tree3))) ;;
+
+(*********************************************************
+ * FSM testing *******************************************
+*)
+
+module WashStates = 
+  struct
+   type t =  FILL_WSH | WASH | EMPTY | FILL_RNS | RINSE | SPIN | STOP 
+  end ;;
+
+module WashFSM = FSM(WashStates) ;;
+
+let my_fsm = [(WashStates.FILL_WSH, "full",  "water_on",  WashStates.WASH);
+              (WashStates.WASH, "10Minutes", "agitate",   WashStates.EMPTY);
+              (WashStates.EMPTY,"empty",     "drain",     WashStates.FILL_RNS);
+              (WashStates.FILL_RNS,"full",   "water_on",  WashStates.RINSE);
+              (WashStates.RINSE,"10Minutes", "agitate",   WashStates.EMPTY);
+              (WashStates.EMPTY,"empty",     "drain",     WashStates.SPIN);
+              (WashStates.SPIN, "5Minutes",  "motor_on",  WashStates.STOP);
+              (WashStates.STOP, "*",         "motor_off", WashStates.STOP);
+             ];; 
+
+let st_table = WashFSM.create my_fsm;;
+(*********************************************************)
+
 
 
 let suite = "Logic test suite" >::: [
