@@ -158,21 +158,33 @@ printf "op_tree3: \n%s\n" ( (expr_to_str ( op_tree3))) ;;
  * FSM testing *******************************************
 *)
 
+let full         = Var("full");;
+let ten_minutes  = Var("ten_minutes");;
+let empty        = Var("empty");;
+let five_minutes = Var("five_minutes");;
+
+let _ = 
+  assign full         F my_env;
+  assign ten_minutes  F my_env;
+  assign empty        F my_env;
+  assign five_minutes F my_env;;
+
 module WashStates = 
   struct
    type t =  FILL_WSH | WASH | EMPTY | FILL_RNS | RINSE | SPIN | STOP 
+   let start_state = FILL_WSH
   end ;;
 
 module WashFSM = FSM(WashStates) ;;
 
-let my_fsm = [(WashStates.FILL_WSH, "full",  "water_on",  WashStates.WASH);
-              (WashStates.WASH, "10Minutes", "agitate",   WashStates.EMPTY);
-              (WashStates.EMPTY,"empty",     "drain",     WashStates.FILL_RNS);
-              (WashStates.FILL_RNS,"full",   "water_on",  WashStates.RINSE);
-              (WashStates.RINSE,"10Minutes", "agitate",   WashStates.EMPTY);
-              (WashStates.EMPTY,"empty",     "drain",     WashStates.SPIN);
-              (WashStates.SPIN, "5Minutes",  "motor_on",  WashStates.STOP);
-              (WashStates.STOP, "*",         "motor_off", WashStates.STOP);
+let my_fsm = [(WashStates.FILL_WSH, full,    "water_on",  WashStates.WASH);
+              (WashStates.WASH,     ten_minutes, "agitate",   WashStates.EMPTY);
+              (WashStates.EMPTY,    empty,     "drain",     WashStates.FILL_RNS);
+              (WashStates.FILL_RNS, full,   "water_on",  WashStates.RINSE);
+              (WashStates.RINSE,    ten_minutes, "agitate",   WashStates.EMPTY);
+              (WashStates.EMPTY,    empty,     "drain",     WashStates.SPIN);
+              (WashStates.SPIN,     five_minutes,  "motor_on",  WashStates.STOP);
+              (WashStates.STOP,     Const(T) ,         "motor_off", WashStates.STOP);
              ];; 
 
 let st_table = WashFSM.create my_fsm;;
