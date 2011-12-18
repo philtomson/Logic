@@ -7,7 +7,6 @@ open Fsm;;
 let x = Var("x", Some(F)) ;;
 let y = Var("y", Some(T));;
 *)
-let my_env = Hashtbl.create 225;;
 let expr = Bop(Xor,Const(F),Const(T));;
 
 printf "%s\n" ( expr_to_str expr );;
@@ -36,18 +35,18 @@ let test_reduce _ =
   assert_equal (Const T) reduced_exp ;
   assert_equal (Const T) reduced_anded ;;
 
-let y = Var("y") ;;
-let x = Var("x") ;;
-let z = Var("z") ;;
+let y = Var({name = "y"; value = F}) ;;
+let x = Var({name = "x"; value = F}) ;;
+let z = Var({name = "z"; value = T}) ;;
 (*
 Hashtbl.add my_env y F ;;
 Hashtbl.add my_env x F ;;
 Hashtbl.add my_env z T ;;
 *)
 let _ = 
-  assign x F my_env ;
-  assign y F my_env ;
-  assign z T my_env ;;
+  assign x F  ;
+  assign y F  ;
+  assign z T  ;;
 
 let x_and_y = Bop(And, z, Bop(Or,(Not(z)),Bop(And,x,y))) ;;
 printf "num ops: %d\n" (op_count x_and_y) ;;
@@ -62,11 +61,11 @@ let rec iter_bop_ttbl lst op = match lst with  (* test binary operators *)
       let i1  = fst ins in
       let i2  = snd ins in
       let expr = op (Const i1) (Const i2) in
-      assert_equal  (eval expr my_env) (res) );  iter_bop_ttbl xs op ; ()  ;;
+      assert_equal  (eval expr ) (res) );  iter_bop_ttbl xs op ; ()  ;;
 
 let test_not _ =
-  assert_equal ( eval (Not(Const T)) my_env) F ;
-  assert_equal ( eval (Not(Const F)) my_env) T ;;
+  assert_equal ( eval (Not(Const T)) ) F ;
+  assert_equal ( eval (Not(Const F)) ) T ;;
 
 let test_and _ = 
   let inputs = [((F,F),F);
@@ -123,7 +122,11 @@ let test_demorganize _ =
   (*assert_equal (demorganize not_x_or_y) (Not (Or (Var "x", Var "y")))*)
   (*assert_equal (demorganize not_x_or_y) (Not( Bop(Or,x, y))) ;;*)
 
-let inputs = [Var "a"; Var "b"; Var "c"; Var "d"; Var "e"];;
+let inputs = [Var ({name="a"; value=F}); 
+              Var ({name="b"; value=F}); 
+              Var ({name="c"; value=F});
+              Var ({name="d"; value=F});
+              Var ({name="e"; value=F})];;
 
 let op_tree = make_tree_from_list inputs;;
 printf "op_tree: \n%s\n" ( (expr_to_str ( op_tree))) ;;
@@ -158,16 +161,16 @@ printf "op_tree3: \n%s\n" ( (expr_to_str ( op_tree3))) ;;
  * FSM testing *******************************************
 *)
 
-let full         = Var("full");;
-let ten_minutes  = Var("ten_minutes");;
-let empty        = Var("empty");;
-let five_minutes = Var("five_minutes");;
+let full         = Var({name ="full"; value  = F});;
+let ten_minutes  = Var({name = "ten_minutes"; value = F});;
+let empty        = Var({name = "empty"; value = F});;
+let five_minutes = Var({name = "five_minutes"; value =F});;
 
 let _ = 
-  assign full         F my_env;
-  assign ten_minutes  F my_env;
-  assign empty        F my_env;
-  assign five_minutes F my_env;;
+  assign full         F ;
+  assign ten_minutes  F ;
+  assign empty        F ;
+  assign five_minutes F ;;
 
 module WashStates = 
   struct

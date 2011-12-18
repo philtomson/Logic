@@ -1,7 +1,7 @@
   exception VarNotDefined ;;
   exception NotAVariable ;;
   type boolean = T | F ;;
-  type variable = Name of string | NameVal of string*boolean ;;
+  (*type variable = Name of string | NameVal of string*boolean ;;*)
   type 'a optional  = Some of 'a | None ;;
 
   let to_bool v = match v with 
@@ -17,10 +17,11 @@
     | x::xs -> (Printf.printf "%s " (b_to_s x)); print_bool_lst xs ;;
 
   type  bexp = Const of boolean 
-    |  Var of string  (* TODO: perhaps rename Var to Input *)
+    |  Var of variable
     |  Bop of bop * bexp * bexp
     |  Not of bexp
   and bop = And | Or | Xor
+  and variable = { name: string; mutable value: boolean }
     ;;
 
   let and_ x y = match x,y with
@@ -59,7 +60,7 @@
     | Bop(op,x,y) ->  " (" ^ (expr_to_str x) ^ (op_to_str op) ^ 
                              (expr_to_str y) ^ ") "
     | Not(x)      ->  " !"^  (expr_to_str x) ^ " " 
-    | Var(x)      ->  " " ^ x ^ " "
+    | Var(x)      ->  " " ^ x.name ^ " "
 
   let rec reduce exp = 
      match exp with
@@ -94,15 +95,15 @@
     | _ -> exp ;;
 
 
-  let assign var v env = match var with
-      Var(x) as var' -> Hashtbl.add env var' v
+  let assign var v  = match var with
+      Var(x)  -> x.value <- v 
     | _ -> raise NotAVariable ;;
 
-  let rec eval exp env = match exp with
+  let rec eval exp  = match exp with
       Const x     -> x
-    | Bop(op,x,y) -> (bop_to_func op) ( eval x env) ( eval y env) 
-    | Not(x)      -> n (eval x env) 
-    | (Var(x)) as x'      -> (Hashtbl.find env x')   ;;
+    | Bop(op,x,y) -> (bop_to_func op) ( eval x ) ( eval y ) 
+    | Not(x)      -> n (eval x ) 
+    | Var(x)      -> x.value ;;
 
   let rec get_inputs exp = match exp with 
       Const x     -> []

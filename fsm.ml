@@ -30,8 +30,7 @@ module FSM (States : STATES)  =
       end
     )
 
-    (*include ST_Table*)
-    (*let stab = ST_Table.create 5*)
+    (*need a next_state function *)
                       
     let create fsmtab  =   
       let stab = ST_Table.create 5 in
