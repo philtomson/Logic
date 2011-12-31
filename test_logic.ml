@@ -176,21 +176,36 @@ module WashStates =
   struct
    type t =  FILL_WSH | WASH | EMPTY | FILL_RNS | RINSE | SPIN | STOP 
    let start_state = FILL_WSH
+
+   let to_s s = match s with
+     FILL_WSH -> "FILL_WSH"
+   | WASH     -> "WASH"
+   | EMPTY    -> "EMPTY"
+   | FILL_RNS -> "FILL_RNS"
+   | RINSE    -> "RINSE"
+   | SPIN     -> "SPIN"
+   | STOP     -> "STOP"
+
   end ;;
 
 module WashFSM = FSM(WashStates) ;;
 
-let my_fsm = [(WashStates.FILL_WSH, full,    "water_on",  WashStates.WASH);
-              (WashStates.WASH,     ten_minutes, "agitate",   WashStates.EMPTY);
-              (WashStates.EMPTY,    empty,     "drain",     WashStates.FILL_RNS);
-              (WashStates.FILL_RNS, full,   "water_on",  WashStates.RINSE);
-              (WashStates.RINSE,    ten_minutes, "agitate",   WashStates.EMPTY);
-              (WashStates.EMPTY,    empty,     "drain",     WashStates.SPIN);
-              (WashStates.SPIN,     five_minutes,  "motor_on",  WashStates.STOP);
-              (WashStates.STOP,     Const(T) ,         "motor_off", WashStates.STOP);
+open WashStates;;
+let my_fsm = [(FILL_WSH, full,       "water_on",  WASH);
+              (WASH,     ten_minutes,"agitate",   EMPTY);
+              (EMPTY,    empty,      "drain",     FILL_RNS);
+              (FILL_RNS, full,       "water_on",  RINSE);
+              (RINSE,    ten_minutes,"agitate",   EMPTY);
+              (EMPTY,    empty,      "drain",     SPIN);
+              (SPIN,     five_minutes,"motor_on",  STOP);
+              (STOP,     Const(T) ,  "motor_off", STOP);
              ];; 
 
-let st_table = WashFSM.create my_fsm;;
+let st_table, current_state = WashFSM.create my_fsm;;
+Printf.printf "current_state is: %s\n" ( to_s current_state);;
+let _ = assign full T;;
+let current_state = WashFSM.next st_table current_state in
+Printf.printf "current_state is: %s\n" ( to_s current_state);;
 (*********************************************************)
 
 

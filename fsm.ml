@@ -8,6 +8,10 @@ type ('cs, 'cond) st_cond = State_Cond of ('cs * 'cond) ;;
 type ('action, 'ns) st_action_ns = Action_NS of ('action * 'ns);;
 *)
 
+type ('pred, 'ns) p_a_n = { pred: 'pred; 
+                            action: string; (*for now*)
+                            ns: 'ns };;
+
  module type STATES = 
     sig
       type t
@@ -34,10 +38,26 @@ module FSM (States : STATES)  =
                       
     let create fsmtab  =   
       let stab = ST_Table.create 5 in
-      List.iter (fun (cs, cond, action, ns) ->  ST_Table.add stab cs (cond,
-      action, ns)) fsmtab ; stab
+      List.iter (fun (cs, cond, action, ns) ->  
+        ST_Table.add stab cs { pred  = cond;
+                               action= action; 
+                               ns    = ns }) fsmtab; 
+                               (stab, start_state)
 
-    let find_all st  stab = ST_Table.find_all stab st 
+    let find_all stab st = ST_Table.find_all stab st 
+
+    let next stab cs = 
+      let targets = find_all stab cs in
+
+      let rec find_next lst = match lst with
+        []    -> None
+      | x::xs -> if( to_bool (eval x.pred) ) then Some x.ns
+                 else find_next xs      in
+      match (find_next targets) with
+        None   -> cs (*stay in current state*)
+      | Some s -> s 
+
+
   end ;;    
 
 (*
