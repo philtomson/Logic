@@ -8,8 +8,8 @@ ocamlbuild -use-ocamlfind test_logic.native -classic-display
 
 Dependencies: 
 oUnit
-deriving-ocsigen
-deriving-ocsigen.syntax
+deriving-ocsigen (see: https://github.com/hnrgrgr/deriving )
+deriving-ocsigen.syntax       "
 
 
 
