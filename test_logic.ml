@@ -174,7 +174,9 @@ let _ =
 
 module WashStates = 
   struct
-   type t =  FILL_WSH | WASH | EMPTY | FILL_RNS | RINSE | SPIN | STOP 
+   type t =  FILL_WSH | WASH | EMPTY | FILL_RNS | RINSE | SPIN | STOP
+   deriving(Show, Enum)
+     
    let start_state = FILL_WSH
 
    let to_s s = match s with
@@ -185,6 +187,11 @@ module WashStates =
    | RINSE    -> "RINSE"
    | SPIN     -> "SPIN"
    | STOP     -> "STOP"
+
+   let enum = 
+     let enum_types = Enum.enum_from<t> FILL_WSH in
+     let enum_strings = List.map (to_s) enum_types in
+     String.concat ", " enum_strings 
 
   end ;;
 
@@ -206,6 +213,7 @@ Printf.printf "current_state is: %s\n" ( to_s current_state);;
 let _ = assign full T;;
 let current_state = WashFSM.next st_table current_state in
 Printf.printf "current_state is: %s\n" ( to_s current_state);;
+print_endline ( WashStates.enum);; 
 (*********************************************************)
 
 

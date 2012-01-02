@@ -34,7 +34,6 @@ module FSM (States : STATES)  =
       end
     )
 
-    (*need a next_state function *)
                       
     let create fsmtab  =   
       let stab = ST_Table.create 5 in
@@ -46,16 +45,22 @@ module FSM (States : STATES)  =
 
     let find_all stab st = ST_Table.find_all stab st 
 
-    let next stab cs = 
+    let next stab cs = (*get next state*) 
       let targets = find_all stab cs in
 
       let rec find_next lst = match lst with
         []    -> None
       | x::xs -> if( to_bool (eval x.pred) ) then Some x.ns
+                 (*TODO: action is side effect; put it here?*)
+                 (* ex: assign action T *)
+
                  else find_next xs      in
       match (find_next targets) with
         None   -> cs (*stay in current state*)
       | Some s -> s 
+
+      (* TODO: ^^need to return not just the current state but also
+       * the action *)
 
 
   end ;;    

@@ -2,13 +2,14 @@ Logic
 
 Just playing around with Logic and boolean minimization for now...
 
-This code is in OCaml.  To compile:
+This code is in OCaml.  Now we use ocamlbuild to compile:
 
-ocamlc -o logic logic.ml
+ocamlbuild -use-ocamlfind test_logic.native -classic-display
 
-OR (to add oUnit): 
+Dependencies: 
+oUnit
+deriving-ocsigen
+deriving-ocsigen.syntax
 
-ocamlfind ocamlc -o logic -linkpkg -package oUnit logic.ml
 
-Now that I've added tests it's better to build with omake (you'll need to install omake if you don't have it installed).  An OMakefile has been added to the project.
 
