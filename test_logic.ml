@@ -179,21 +179,8 @@ module WashStates =
      
    let start_state = FILL_WSH
 
-   let to_s s = match s with
-     FILL_WSH -> "FILL_WSH"
-   | WASH     -> "WASH"
-   | EMPTY    -> "EMPTY"
-   | FILL_RNS -> "FILL_RNS"
-   | RINSE    -> "RINSE"
-   | SPIN     -> "SPIN"
-   | STOP     -> "STOP"
-
-   let enum = 
-     let enum_types = Enum.enum_from<t> FILL_WSH in
-     let enum_strings = List.map (to_s) enum_types in
-     String.concat ", " enum_strings 
-
   end ;;
+
 
 module WashFSM = FSM(WashStates) ;;
 
@@ -209,11 +196,11 @@ let my_fsm = [(FILL_WSH, full,       "water_on",  WASH);
              ];; 
 
 let st_table, current_state = WashFSM.create my_fsm;;
-Printf.printf "current_state is: %s\n" ( to_s current_state);;
+Printf.printf "current_state is: %s\n" ( WashFSM.state_to_s current_state);;
 let _ = assign full T;;
 let current_state = WashFSM.next st_table current_state in
-Printf.printf "current_state is: %s\n" ( to_s current_state);;
-print_endline ( WashStates.enum);; 
+Printf.printf "current_state is: %s\n" ( WashFSM.state_to_s current_state);;
+print_endline ( WashFSM.enum_states);; 
 (*********************************************************)
 
 

@@ -1,1 +1,1 @@
-<*.ml> or "test_logic.native": package(unix), package(oUnit), package(deriving-ocsigen), package(deriving-ocsigen.syntax), syntax(camlp4o)
+<*.ml> or "test_logic.native" or "test_loginc.byte": package(unix), package(oUnit), package(deriving-ocsigen), package(deriving-ocsigen.syntax), syntax(camlp4o)

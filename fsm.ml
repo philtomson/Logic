@@ -15,6 +15,8 @@ type ('pred, 'ns) p_a_n = { pred: 'pred;
  module type STATES = 
     sig
       type t
+        deriving (Show, Enum)
+
       val start_state : t
     end ;;
 
@@ -25,6 +27,15 @@ module FSM (States : STATES)  =
   struct 
     type t = States.t
     let start_state = States.start_state
+
+    let enum_states = 
+      let enum_types = Enum.enum_from<States.t> (Enum.to_enum<States.t> 0) in
+      let enum_strings = List.map (fun et -> Show.show<States.t> et ) enum_types in
+      String.concat ", " enum_strings 
+   
+    let state_to_s state = Show.show<States.t> state
+
+
   
     module ST_Table = Hashtbl.Make (
       struct
@@ -53,7 +64,6 @@ module FSM (States : STATES)  =
       | x::xs -> if( to_bool (eval x.pred) ) then Some x.ns
                  (*TODO: action is side effect; put it here?*)
                  (* ex: assign action T *)
-
                  else find_next xs      in
       match (find_next targets) with
         None   -> cs (*stay in current state*)
