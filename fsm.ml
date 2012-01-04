@@ -1,12 +1,4 @@
 open Logic;;
-(*
-type 'a state = State of 'a ;;
-type ('cs, 'cond, 'action, 'ns) st_entry = ST_Entry of ('cs * 'cond * 'action * 'ns);;
-type state_list = st_entry list ;;
-type ('cs, 'cond) st_cond = State_Cond of ('cs * 'cond) ;;
-
-type ('action, 'ns) st_action_ns = Action_NS of ('action * 'ns);;
-*)
 
 type ('pred, 'ns) p_a_n = { pred: 'pred; 
                             actions: (bexp*boolean) list; (*for now*)
@@ -18,7 +10,7 @@ type ('pred, 'ns) p_a_n = { pred: 'pred;
         deriving (Show, Enum)
 
       val start_state : t
-    end ;;
+    end 
 
 module FSM (States : STATES)  =
   struct 
@@ -76,24 +68,5 @@ module FSM (States : STATES)  =
   end ;;    
 
 (*
-module WashStates = 
-  struct
-   type t =  FILL_WSH | WASH | EMPTY | FILL_RNS | RINSE | SPIN | STOP 
-   let start_state = FILL_WSH 
-  end ;;
-
-module WashFSM = FSM(WashStates) ;;
-
-let my_fsm = [(WashStates.FILL_WSH, "full",  "water_on",  WashStates.WASH);
-              (WashStates.WASH, "10Minutes", "agitate",   WashStates.EMPTY);
-              (WashStates.EMPTY,"empty",     "drain",     WashStates.FILL_RNS);
-              (WashStates.FILL_RNS,"full",   "water_on",  WashStates.RINSE);
-              (WashStates.RINSE,"10Minutes", "agitate",   WashStates.EMPTY);
-              (WashStates.EMPTY,"empty",     "drain",     WashStates.SPIN);
-              (WashStates.SPIN, "5Minutes",  "motor_on",  WashStates.STOP);
-              (WashStates.STOP, "*",         "motor_off", WashStates.STOP);
-             ];; 
-
-let st_table = WashFSM.create my_fsm;;
-WashFSM.find_all WashStates.FILL_WSH st_table;;
+ see WashFSM example in test_logic.ml
 *)
