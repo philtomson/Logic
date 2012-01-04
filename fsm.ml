@@ -1,4 +1,4 @@
-open Logic
+ open Logic
 
 type ('pred, 'ns) p_a_n = { pred: 'pred; 
                             actions: (bexp*boolean) list; 
@@ -66,77 +66,7 @@ module FSM (States : STATES)  =
       | Some s    -> s 
 
   end 
-  
-  (*Example usage*)
- 
-  
-  (* inputs *)
-let full         = Var({name ="full"; value  = F});;
-let ten_minutes  = Var({name = "ten_minutes"; value = F});;
-let empty        = Var({name = "empty"; value = F});;
-let five_minutes = Var({name = "five_minutes"; value =F});;
 
- 
-
-(* outputs *)
-let water_on     = Var({name = "water_on";    value = F});;
-let agitate      = Var({name = "agitate";     value = F});;
-let drain        = Var({name = "drain"  ;     value = F});;
-let start_timer  = Var({name = "start_timer"; value = F});;
-let motor_on     = Var({name = "motor_on";    value = F});;
- 
-module WashStates = 
-  struct
-   type t =  START | FILL_WSH | WASH | EMPTY | FILL_RNS | RINSE | SPIN | STOP
-   deriving(Show, Enum)
-     
-   let start_state = START
-
-  end 
-
-
-module WashFSM = FSM(WashStates) 
-
-open WashStates
-
-              (* CS,     PREDICATE,  NS,       ACTIONs *)
-let my_fsm = [(START,    Const(T),   FILL_WSH, [(water_on,   T)] );
-              (FILL_WSH, full,       WASH,     [(water_on,   F);
-                                                (agitate,    T);
-                                                (start_timer,T)] );
-              (WASH,     ten_minutes,EMPTY,    [(agitate,    F);
-                                                (start_timer,F); 
-                                                (drain,      T)] );
-              (EMPTY,    empty,      FILL_RNS, [(drain,      F); 
-                                                (water_on,   T)] );
-              (FILL_RNS, full,       RINSE,    [(water_on,   F); 
-                                                (agitate,    T)]);
-              (RINSE,    ten_minutes,EMPTY,    [(agitate,    F);
-                                                (drain,      T)] );
-              (EMPTY,    empty,      SPIN,     [(motor_on,   T);
-                                                (start_timer,T)]);
-              (SPIN,     five_minutes,STOP,    [(water_on,   F);
-                                                (drain,      F);
-                                                (start_timer,F);
-                                                (motor_on,   F)]);
-              (STOP,     Const(T) ,  STOP,     [(motor_on,   F)]);
-             ];; 
- 
-
-let st_table, current_state = WashFSM.create my_fsm in
-let _ = assign full T in
-let current_state = WashFSM.eval_fsm st_table current_state  in
-let _ = assign ten_minutes T in
-let current_state = WashFSM.eval_fsm st_table current_state  in
-let current_state = WashFSM.eval_fsm st_table current_state  in
-let _ = (assign ten_minutes F);(assign empty T) in
-let current_state = WashFSM.eval_fsm st_table current_state  in
-
-let _ = assign five_minutes T in
-let current_state = WashFSM.eval_fsm st_table current_state  in
-
-print_endline ( WashFSM.enum_states) ;; 
-(****************************************
-  
-  
-  
+(*
+ see WashFSM example in test_logic.ml
+*)
