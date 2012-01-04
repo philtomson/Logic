@@ -9,8 +9,8 @@ type ('action, 'ns) st_action_ns = Action_NS of ('action * 'ns);;
 *)
 
 type ('pred, 'ns) p_a_n = { pred: 'pred; 
-                            action: string; (*for now*)
-                            ns: 'ns };;
+                            actions: string list; (*for now*)
+                            ns: 'ns } deriving(Show);;
 
  module type STATES = 
     sig
@@ -21,9 +21,6 @@ type ('pred, 'ns) p_a_n = { pred: 'pred;
     end ;;
 
 module FSM (States : STATES)  =
-(*module FSM = functor (States : STATES) ->*)
-(*module FSM (States : STATES) (ST : Hashtbl.HashedType) =*)
-(*module FSM (States : STATES) (ST : Hashtbl.S) =*)
   struct 
     type t = States.t
     let start_state = States.start_state
@@ -35,8 +32,6 @@ module FSM (States : STATES)  =
    
     let state_to_s state = Show.show<States.t> state
 
-
-  
     module ST_Table = Hashtbl.Make (
       struct
         type t = States.t
@@ -44,33 +39,36 @@ module FSM (States : STATES)  =
         let hash = Hashtbl.hash
       end
     )
-
+ 
                       
     let create fsmtab  =   
       let stab = ST_Table.create 5 in
-      List.iter (fun (cs, cond, action, ns) ->  
+      List.iter (fun (cs, cond, ns, actions) ->  
         ST_Table.add stab cs { pred  = cond;
-                               action= action; 
+                               actions= actions; 
                                ns    = ns }) fsmtab; 
-                               (stab, start_state)
+                               (stab, start_state, [""])
 
     let find_all stab st = ST_Table.find_all stab st 
 
-    let next stab cs = (*get next state*) 
+
+    let eval_fsm stab cs ca = (*get next state*) 
+      (*Printf.printf "  cs is: %s\n" (state_to_s cs);*)
       let targets = find_all stab cs in
 
       let rec find_next lst = match lst with
         []    -> None
-      | x::xs -> if( to_bool (eval x.pred) ) then Some x.ns
-                 (*TODO: action is side effect; put it here?*)
-                 (* ex: assign action T *)
-                 else find_next xs      in
+      | x::xs -> if( to_bool (eval x.pred) ) then 
+                   Some (x.ns, x.actions)
+                 else 
+                   find_next xs      
+                 in
       match (find_next targets) with
-        None   -> cs (*stay in current state*)
-      | Some s -> s 
+        None      -> (cs,ca) (*stay in current state*)
+      | Some(s,a) -> (s, a )
 
       (* TODO: ^^need to return not just the current state but also
-       * the action *)
+       * the action ?? *)
 
 
   end ;;    

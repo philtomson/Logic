@@ -161,23 +161,32 @@ printf "op_tree3: \n%s\n" ( (expr_to_str ( op_tree3))) ;;
  * FSM testing *******************************************
 *)
 
+(* inputs *)
 let full         = Var({name ="full"; value  = F});;
 let ten_minutes  = Var({name = "ten_minutes"; value = F});;
 let empty        = Var({name = "empty"; value = F});;
 let five_minutes = Var({name = "five_minutes"; value =F});;
 
+
 let _ = 
   assign full         F ;
-  assign ten_minutes  F ;
+  assign ten_minutes  T ;
   assign empty        F ;
   assign five_minutes F ;;
 
+(* outputs *)
+let water_on     = Var({name = "water_on";    value = F});;
+let agitate      = Var({name = "agitate";     value = F});;
+let drain        = Var({name = "drain"  ;     value = F});;
+let start_timer  = Var({name = "start_timer"; value = F});;
+let motor_on     = Var({name = "motor_on";    value = F});;
+
 module WashStates = 
   struct
-   type t =  FILL_WSH | WASH | EMPTY | FILL_RNS | RINSE | SPIN | STOP
+   type t =  START | FILL_WSH | WASH | EMPTY | FILL_RNS | RINSE | SPIN | STOP
    deriving(Show, Enum)
      
-   let start_state = FILL_WSH
+   let start_state = START
 
   end ;;
 
@@ -185,22 +194,56 @@ module WashStates =
 module WashFSM = FSM(WashStates) ;;
 
 open WashStates;;
-let my_fsm = [(FILL_WSH, full,       "water_on",  WASH);
-              (WASH,     ten_minutes,"agitate",   EMPTY);
-              (EMPTY,    empty,      "drain",     FILL_RNS);
-              (FILL_RNS, full,       "water_on",  RINSE);
-              (RINSE,    ten_minutes,"agitate",   EMPTY);
-              (EMPTY,    empty,      "drain",     SPIN);
-              (SPIN,     five_minutes,"motor_on",  STOP);
-              (STOP,     Const(T) ,  "motor_off", STOP);
+
+              (* CS,     PREDICATE,  NS,       ACTION *)
+let my_fsm = [(START,    Const(T),   FILL_WSH, ["water_on"] );
+              (FILL_WSH, full,       WASH,     ["!water_on"; "agitate";
+              "start_timer"]  );
+              (WASH,     ten_minutes,EMPTY,    ["!agitate,!start_timer, drain"]);
+              (EMPTY,    empty,      FILL_RNS, ["!drain, water_on"]);
+              (FILL_RNS, full,       RINSE,    ["!water_on, agitate"]);
+              (RINSE,    ten_minutes,EMPTY,    ["!agitate, drain"]);
+              (EMPTY,    empty,      SPIN,     ["motor_on,start_timer"]);
+              (SPIN,     five_minutes,STOP,    ["!water_on,!drain,!start_timer,
+              !motor_on"]);
+              (STOP,     Const(T) ,  STOP,     ["!motor_on"]);
              ];; 
 
-let st_table, current_state = WashFSM.create my_fsm;;
-Printf.printf "current_state is: %s\n" ( WashFSM.state_to_s current_state);;
-let _ = assign full T;;
-let current_state = WashFSM.next st_table current_state in
-Printf.printf "current_state is: %s\n" ( WashFSM.state_to_s current_state);;
-print_endline ( WashFSM.enum_states);; 
+(*
+            use BLIF-KISS2-like format:
+  (inputs) CS NS (outputs)
+in this formulation, the outputs happen on the transition to the next
+state
+  
+ *)
+
+let st_table, current_state, action = WashFSM.create my_fsm in
+let _ = Printf.printf "current_state is: %s action is: %s\n" (
+  WashFSM.state_to_s current_state) (String.concat ", " action) in
+let _ = assign full T in
+let (current_state, action) = WashFSM.eval_fsm st_table current_state action in
+let _ = Printf.printf "Current_state is: %s action is: %s\n" (
+  WashFSM.state_to_s current_state) (String.concat ", " action) in
+let _ = assign ten_minutes T in
+let (current_state, action) = WashFSM.eval_fsm st_table current_state action in
+let _ = Printf.printf "cUrrent_state is: %s action is: %s\n" (
+  WashFSM.state_to_s current_state) (String.concat ", " action) in
+
+let (current_state, action) = WashFSM.eval_fsm st_table current_state action in
+let _ = Printf.printf "cUrrent_state is: %s action is: %s\n" (
+  WashFSM.state_to_s current_state) (String.concat ", " action) in
+
+let _ = (assign ten_minutes F);(assign empty T) in
+let (current_state, action) = WashFSM.eval_fsm st_table current_state action in
+let _ = Printf.printf "cUrrent_state is: %s action is: %s\n" (
+  WashFSM.state_to_s current_state) (String.concat ", " action) in
+
+let _ = assign five_minutes T in
+let (current_state, action) = WashFSM.eval_fsm st_table current_state action in
+let _ = Printf.printf "cUrrent_state is: %s action is: %s\n" (
+  WashFSM.state_to_s current_state) (String.concat ", " action) in
+
+print_endline ( WashFSM.enum_states) ;; 
 (*********************************************************)
 
 
