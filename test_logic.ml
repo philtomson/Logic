@@ -194,14 +194,14 @@ module WashStates =
      
    let start_state = START
 
-  end ;;
+  end 
 
 
-module WashFSM = FSM(WashStates) ;;
+module WashFSM = FSM(WashStates) 
 
-open WashStates;;
+open WashStates
 
-              (* CS,     PREDICATE,  NS,       ACTION *)
+              (* CS,     PREDICATE,  NS,       ACTIONs *)
 let my_fsm = [(START,    Const(T),   FILL_WSH, [(water_on,   T)] );
               (FILL_WSH, full,       WASH,     [(water_on,   F);
                                                 (agitate,    T);

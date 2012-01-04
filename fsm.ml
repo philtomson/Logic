@@ -1,7 +1,7 @@
-open Logic;;
+open Logic
 
 type ('pred, 'ns) p_a_n = { pred: 'pred; 
-                            actions: (bexp*boolean) list; (*for now*)
+                            actions: (bexp*boolean) list; 
                             ns: 'ns } deriving(Show);;
 
  module type STATES = 
@@ -65,7 +65,7 @@ module FSM (States : STATES)  =
         None      -> cs (*stay in current state*)
       | Some s    -> s 
 
-  end ;;    
+  end 
 
 (*
  see WashFSM example in test_logic.ml
