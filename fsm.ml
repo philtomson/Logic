@@ -68,7 +68,7 @@ module FSM (States : STATES)  =
   end 
   
   (*Example usage*)
-  open Logic
+ 
   
   (* inputs *)
 let full         = Var({name ="full"; value  = F});;
@@ -106,9 +106,9 @@ module WashStates =
   end ;;
 
 
-module WashFSM = FSM(WashStates) ;;
+module WashFSM = FSM(WashStates) 
 
-open WashStates;;
+open WashStates
 
               (* CS,     PREDICATE,  NS,       ACTIONs *)
 let my_fsm = [(START,    Const(T),   FILL_WSH, [(water_on,   T)] );
