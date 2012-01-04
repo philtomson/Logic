@@ -1,5 +1,6 @@
 open Logic
 
+
 type ('pred, 'ns) p_a_n = { pred: 'pred; 
                             actions: (bexp*boolean) list; 
                             ns: 'ns } deriving(Show);;
