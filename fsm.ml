@@ -76,12 +76,7 @@ let ten_minutes  = Var({name = "ten_minutes"; value = F});;
 let empty        = Var({name = "empty"; value = F});;
 let five_minutes = Var({name = "five_minutes"; value =F});;
 
-
-let _ = 
-  assign full         F ;
-  assign ten_minutes  F ;
-  assign empty        F ;
-  assign five_minutes F ;;
+ 
 
 (* outputs *)
 let water_on     = Var({name = "water_on";    value = F});;
@@ -89,13 +84,7 @@ let agitate      = Var({name = "agitate";     value = F});;
 let drain        = Var({name = "drain"  ;     value = F});;
 let start_timer  = Var({name = "start_timer"; value = F});;
 let motor_on     = Var({name = "motor_on";    value = F});;
-let reset_actions = 
-  assign water_on      F;
-  assign agitate       F;
-  assign drain         F;
-  assign start_timer   F;
-  assign motor_on      F;;
-
+ 
 module WashStates = 
   struct
    type t =  START | FILL_WSH | WASH | EMPTY | FILL_RNS | RINSE | SPIN | STOP
@@ -103,7 +92,7 @@ module WashStates =
      
    let start_state = START
 
-  end ;;
+  end 
 
 
 module WashFSM = FSM(WashStates) 
