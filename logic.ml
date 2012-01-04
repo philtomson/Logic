@@ -1,6 +1,6 @@
   exception VarNotDefined ;;
   exception NotAVariable ;;
-  type boolean = T | F ;;
+  type boolean = T | F deriving(Show,Enum);;
   (*type variable = Name of string | NameVal of string*boolean ;;*)
   type 'a optional  = Some of 'a | None ;;
 
@@ -20,10 +20,14 @@
     |  Var of variable
     |  Bop of bop * bexp * bexp
     |  Not of bexp
-  and bop = And | Or | Xor
-  and variable = { name: string; mutable value: boolean }
+  and bop = And | Or | Xor 
+  and variable = { name: string; mutable value: boolean } deriving (Show)
     ;;
 
+  let var_to_s var = match var with
+    Var(v) -> (if (v.value = F) then "!" else "") ^ v.name 
+  | _ -> raise NotAVariable ;;
+    
   let and_ x y = match x,y with
       (T,T) -> T
     | _     -> F;;
@@ -98,6 +102,8 @@
   let assign var v  = match var with
       Var(x)  -> x.value <- v 
     | _ -> raise NotAVariable ;;
+
+
 
   let rec eval exp  = match exp with
       Const x     -> x

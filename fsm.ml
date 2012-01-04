@@ -9,7 +9,7 @@ type ('action, 'ns) st_action_ns = Action_NS of ('action * 'ns);;
 *)
 
 type ('pred, 'ns) p_a_n = { pred: 'pred; 
-                            actions: string list; (*for now*)
+                            actions: (bexp*boolean) list; (*for now*)
                             ns: 'ns } deriving(Show);;
 
  module type STATES = 
@@ -47,29 +47,31 @@ module FSM (States : STATES)  =
         ST_Table.add stab cs { pred  = cond;
                                actions= actions; 
                                ns    = ns }) fsmtab; 
-                               (stab, start_state, [""])
+                               (stab, start_state)
 
     let find_all stab st = ST_Table.find_all stab st 
 
 
-    let eval_fsm stab cs ca = (*get next state*) 
+    let eval_fsm stab cs  = (*get next state*) 
       (*Printf.printf "  cs is: %s\n" (state_to_s cs);*)
       let targets = find_all stab cs in
 
       let rec find_next lst = match lst with
         []    -> None
       | x::xs -> if( to_bool (eval x.pred) ) then 
-                   Some (x.ns, x.actions)
+                 (
+                   (*do actions*)
+                   List.iter (fun (var, value) -> assign var value) x.actions;
+                   Printf.printf "current state: %s  \tactions: %s \n" (state_to_s x.ns) (String.concat ", " (List.map (fun (var, value) ->
+                                            var_to_s var) x.actions));
+                   Some x.ns
+                 )
                  else 
                    find_next xs      
                  in
       match (find_next targets) with
-        None      -> (cs,ca) (*stay in current state*)
-      | Some(s,a) -> (s, a )
-
-      (* TODO: ^^need to return not just the current state but also
-       * the action ?? *)
-
+        None      -> cs (*stay in current state*)
+      | Some s    -> s 
 
   end ;;    
 
