@@ -180,6 +180,9 @@ let agitate      = Var({name = "agitate";     value = F});;
 let drain        = Var({name = "drain"  ;     value = F});;
 let start_timer  = Var({name = "start_timer"; value = F});;
 let motor_on     = Var({name = "motor_on";    value = F});;
+let washed       = Var({name = "washed";    value = F});;
+let soap         = Var({name = "soap";        value = F});;
+
 let reset_actions = 
   assign water_on      F;
   assign agitate       F;
@@ -189,7 +192,7 @@ let reset_actions =
 
 module WashStates = 
   struct
-   type t =  START | FILL_WSH | WASH | EMPTY | FILL_RNS | RINSE | SPIN | STOP
+   type t =  START | FILL | WASH | DRAIN |  RINSE | SPIN | STOP
    deriving(Show, Enum)
      
    let start_state = START
@@ -201,36 +204,35 @@ module WashFSM = FSM(WashStates)
 
 open WashStates
 
-              (* CS,     PREDICATE,  NS,       ACTIONs *)
-let my_fsm = [(START,    Const(T),   FILL_WSH, [(water_on,   T)] );
-              (FILL_WSH, full,       WASH,     [(water_on,   F);
-                                                (agitate,    T);
-                                                (start_timer,T)] );
-              (WASH,     ten_minutes,EMPTY,    [(agitate,    F);
-                                                (start_timer,F); 
-                                                (drain,      T)] );
-              (EMPTY,    empty,      FILL_RNS, [(drain,      F); 
-                                                (water_on,   T)] );
-              (FILL_RNS, full,       RINSE,    [(water_on,   F); 
-                                                (agitate,    T)]);
-              (RINSE,    ten_minutes,EMPTY,    [(agitate,    F);
-                                                (drain,      T)] );
-              (EMPTY,    empty,      SPIN,     [(motor_on,   T);
-                                                (start_timer,T)]);
-              (SPIN,     five_minutes,STOP,    [(water_on,   F);
-                                                (drain,      F);
-                                                (start_timer,F);
-                                                (motor_on,   F)]);
-              (STOP,     Const(T) ,  STOP,     [(motor_on,   F)]);
-             ];; 
+  (* CS,     PREDICATE,             NS,    ACTIONs *)
+let my_fsm = [
+  (START, Const(T),                 FILL, [(water_on,   T); 
+                                           (soap,       T)]);
+  (FILL,  Bop(And,full,soap),       WASH, [(water_on,   F);
+                                           (agitate,    T);
+                                           (washed,     T);
+                                           (start_timer,T)]);
+  (WASH,  ten_minutes,              DRAIN,[(agitate,    F);
+                                           (start_timer,F); 
+                                           (empty,      T)]); 
+  (DRAIN, Bop(And,empty,soap),      FILL, [(drain,      F); 
+                                           (soap,       F);
+                                           (water_on,   T)] );
+  (FILL,  Bop(And,full,Not(soap)),  RINSE,[(water_on,   F); 
+                                           (soap,       F);
+                                           (empty,      F);
+                                           (agitate,    T)]);
+  (RINSE, ten_minutes,              DRAIN, [(agitate,   F);
+                                            (empty,     T)] );
+  (DRAIN, Bop(And,empty,Not(soap)), SPIN,  [(motor_on,  T);
+                                            (start_timer,T)]);
+  (SPIN,  five_minutes,             STOP,  [(water_on,  F);
+                                            (drain,     F);
+                                            (start_timer,F);
+                                            (motor_on,  F)]);
+  (STOP,  Const(T),                 STOP,  [(motor_on,  F)]);
+];; 
 
-(*
-            use BLIF-KISS2-like format:
-  (inputs) CS NS (outputs)
-in this formulation, the outputs happen on the transition to the next
-state
-  
- *)
 
 let st_table, current_state = WashFSM.create my_fsm in
 let _ = assign full T in
@@ -241,6 +243,12 @@ let current_state = WashFSM.eval_fsm st_table current_state  in
 let _ = (assign ten_minutes F);(assign empty T) in
 let current_state = WashFSM.eval_fsm st_table current_state  in
 
+let _ = assign five_minutes T in
+let current_state = WashFSM.eval_fsm st_table current_state  in
+let _ = assign five_minutes F in
+let _ = assign ten_minutes T in
+let current_state = WashFSM.eval_fsm st_table current_state  in
+let current_state = WashFSM.eval_fsm st_table current_state  in
 let _ = assign five_minutes T in
 let current_state = WashFSM.eval_fsm st_table current_state  in
 

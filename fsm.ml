@@ -1,8 +1,8 @@
 open Logic
 
 
-type ('pred, 'ns) p_a_n = { pred: 'pred; 
-                            actions: (bexp*boolean) list; 
+type ('pred, 'ns, 'exp) p_a_n = { pred: 'pred; 
+                            actions: ('exp*boolean) list; 
                             ns: 'ns } deriving(Show);;
 
  module type STATES = 
@@ -63,7 +63,9 @@ module FSM (States : STATES)  =
                    find_next xs      
                  in
       match (find_next targets) with
-        None      -> cs (*stay in current state*)
+        None      -> Printf.printf "NO CHANGE: current state: %s  \n"
+                       (state_to_s cs) ;
+                     cs (*stay in current state*)
       | Some s    -> s 
 
   end 
