@@ -16,12 +16,12 @@
       [] -> (Printf.printf "\n"); []
     | x::xs -> (Printf.printf "%s " (b_to_s x)); print_bool_lst xs ;;
 
+  type variable = { name: string; mutable value: boolean } deriving (Show)
   type  bexp = Const of boolean 
     |  Var of variable
     |  Bop of bop * bexp * bexp
     |  Not of bexp
   and bop = And | Or | Xor 
-  and variable = { name: string; mutable value: boolean } deriving (Show)
     ;;
 
   let var_to_s var = match var with

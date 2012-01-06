@@ -168,6 +168,7 @@ let empty        = Var({name = "empty"; value = F});;
 let five_minutes = Var({name = "five_minutes"; value =F});;
 
 
+
 let _ = 
   assign full         F ;
   assign ten_minutes  F ;
@@ -199,8 +200,19 @@ module WashStates =
 
   end 
 
+module LogicExp = 
+  struct
+    type t     = Logic.bexp
+    type var_t = Logic.variable
 
-module WashFSM = FSM(WashStates) 
+    let eval_exp exp = Logic.to_bool (Logic.eval exp)
+
+    let var_to_s     = Logic.var_to_s
+
+  end
+
+
+module WashFSM = FSM(WashStates)(LogicExp) 
 
 open WashStates
 
@@ -253,6 +265,21 @@ let _ = assign five_minutes T in
 let current_state = WashFSM.eval_fsm st_table current_state  in
 
 print_endline ( WashFSM.enum_states) ;; 
+
+(*
+module BoolExp = 
+  struct
+    type t     = bool
+    type var_t = { name: string; mutable value: bool }
+
+    let eval_exp exp = exp
+
+    let var_to_s var = 
+
+  end
+
+module BWashFSM = FSM(WashStates)(BoolExp) 
+*)
 (*********************************************************)
 
 

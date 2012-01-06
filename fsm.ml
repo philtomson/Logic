@@ -1,8 +1,8 @@
 open Logic
 
 
-type ('pred, 'ns, 'exp) p_a_n = { pred: 'pred; 
-                            actions: ('exp*boolean) list; 
+type ('pred, 'ns, 'exp, 'btype) p_a_n = { pred: 'pred; 
+                            actions: ('exp*'btype) list; 
                             ns: 'ns } deriving(Show);;
 
  module type STATES = 
@@ -11,12 +11,25 @@ type ('pred, 'ns, 'exp) p_a_n = { pred: 'pred;
         deriving (Show, Enum)
 
       val start_state : t
+      
     end 
 
-module FSM (States : STATES)  =
+module type EXPRESSION = 
+  sig
+    type t
+    type var_t
+    val eval_exp : t -> bool
+
+    val var_to_s : t -> string
+  end
+
+module FSM (States : STATES)(Exp : EXPRESSION)  =
   struct 
     type t = States.t
     let start_state = States.start_state
+
+    type vt      = Exp.var_t
+    let eval_exp = Exp.eval_exp
 
     let enum_states = 
       let enum_types = Enum.enum_from<States.t> (Enum.to_enum<States.t> 0) in
@@ -32,7 +45,6 @@ module FSM (States : STATES)  =
         let hash = Hashtbl.hash
       end
     )
- 
                       
     let create fsmtab  =   
       let stab = ST_Table.create 5 in
@@ -44,19 +56,19 @@ module FSM (States : STATES)  =
 
     let find_all stab st = ST_Table.find_all stab st 
 
-
     let eval_fsm stab cs  = (*get next state*) 
       (*Printf.printf "  cs is: %s\n" (state_to_s cs);*)
       let targets = find_all stab cs in
 
       let rec find_next lst = match lst with
         []    -> None
-      | x::xs -> if( to_bool (eval x.pred) ) then 
+      | x::xs -> if( eval_exp x.pred ) then 
                  (
                    (*do actions*)
                    List.iter (fun (var, value) -> assign var value) x.actions;
-                   Printf.printf "current state: %s  \tactions: %s \n" (state_to_s x.ns) (String.concat ", " (List.map (fun (var, value) ->
-                                            var_to_s var) x.actions));
+                   Printf.printf "current state: %s  \tactions: %s \n" (state_to_s x.ns) (String.concat ", " 
+                   (List.map (fun (var, value) ->
+                      ( var_to_s var) ) x.actions ) );
                    Some x.ns
                  )
                  else 
