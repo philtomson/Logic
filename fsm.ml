@@ -23,7 +23,15 @@ module type EXPRESSION =
     val var_to_s : t -> string
   end
 
-module FSM (States : STATES)(Exp : EXPRESSION)  =
+(*
+module type CODEGENERATOR = 
+  sig
+    type t 
+    val to_string : t -> string
+  end
+*)
+
+module FSM (States : STATES)(Exp : EXPRESSION)(*(CodeGen : CODEGENERATOR)*)  =
   struct 
     type t = States.t
     let start_state = States.start_state
@@ -79,6 +87,50 @@ module FSM (States : STATES)(Exp : EXPRESSION)  =
                        (state_to_s cs) ;
                      cs (*stay in current state*)
       | Some s    -> s 
+
+    let get_inputs stab = 
+
+      let pred_list = List.flatten(ST_Table.fold ( fun _ v lst -> 
+        (get_inputs v.pred)::lst) stab []) in
+
+      let inputs = 
+        let rec aux inlst aclst = match inlst with
+          []    -> aclst
+        | e::es -> match e with 
+                     Var(n) -> aux es (e::aclst)
+                   | _      -> aux es aclst  in
+        aux pred_list [] in  
+
+      (*uniqify list*)
+      List.fold_left (fun res e ->
+                        if List.mem e res then res
+                        else (
+                          match e with
+                          Var(n) -> Printf.printf "input: %s\n" n.name;
+                                    e::res
+                          | _    -> res
+                        )
+                      ) [] inputs 
+
+
+(*
+    let get_outputs stab =
+      let action_list = List.flatten( ST_Table.fold ( fun _ v lst -> 
+        (fst v.action)::lst) stab []) 
+*)
+      
+
+      
+
+(*
+    let to_code stab = 
+      (* first analyze predicates to determine inputs*)
+      let input_list = 
+      
+      (* 2nd analyze actions to determine ouputs - easier*)
+      (* 3rd find the intersection between the two lists to 
+       * determine inouts *)
+*)
 
   end 
 

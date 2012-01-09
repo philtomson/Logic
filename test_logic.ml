@@ -247,6 +247,7 @@ let my_fsm = [
 
 
 let st_table, current_state = WashFSM.create my_fsm in
+
 let _ = assign full T in
 let current_state = WashFSM.eval_fsm st_table current_state  in
 let _ = assign ten_minutes T in
@@ -262,9 +263,11 @@ let _ = assign ten_minutes T in
 let current_state = WashFSM.eval_fsm st_table current_state  in
 let current_state = WashFSM.eval_fsm st_table current_state  in
 let _ = assign five_minutes T in
-let current_state = WashFSM.eval_fsm st_table current_state  in
+let _ = WashFSM.eval_fsm st_table current_state  in
+let _ = WashFSM.get_inputs st_table in
 
 print_endline ( WashFSM.enum_states) ;; 
+
 
 (*
 module BoolExp = 
@@ -273,9 +276,7 @@ module BoolExp =
     type var_t = { name: string; mutable value: bool }
 
     let eval_exp exp = exp
-
-    let var_to_s var = 
-
+    let var_to_s var = var.name 
   end
 
 module BWashFSM = FSM(WashStates)(BoolExp) 
