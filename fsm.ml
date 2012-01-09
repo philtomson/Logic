@@ -97,7 +97,7 @@ module FSM (States : STATES)(Exp : EXPRESSION)(*(CodeGen : CODEGENERATOR)*)  =
         let rec aux inlst aclst = match inlst with
           []    -> aclst
         | e::es -> match e with 
-                     Var(n) -> aux es (e::aclst)
+                     Var(n) -> aux es (n::aclst)
                    | _      -> aux es aclst  in
         aux pred_list [] in  
 
@@ -105,20 +105,33 @@ module FSM (States : STATES)(Exp : EXPRESSION)(*(CodeGen : CODEGENERATOR)*)  =
       List.fold_left (fun res e ->
                         if List.mem e res then res
                         else (
-                          match e with
-                          Var(n) -> Printf.printf "input: %s\n" n.name;
-                                    e::res
-                          | _    -> res
+                           Printf.printf "input: %s\n" e.name;
+                           e::res
                         )
                       ) [] inputs 
 
 
-(*
     let get_outputs stab =
       let action_list = List.flatten( ST_Table.fold ( fun _ v lst -> 
-        (fst v.action)::lst) stab []) 
-*)
-      
+        (v.actions)::lst) stab []) in
+
+      let outputs = 
+        let rec aux outlst aclst = match outlst with
+          []                -> aclst
+        | (Var(out),_)::es  -> aux es (out::aclst) 
+        | _::es             -> aux es aclst in
+        aux action_list [] in
+
+
+        List.fold_left (fun res e ->
+                          if List.mem e res then res
+                          else (
+                             Printf.printf "output: %s\n" e.name;
+                             e::res
+                          )
+                        ) []  outputs
+
+    (*let both stab  *)
 
       
 

@@ -265,6 +265,7 @@ let current_state = WashFSM.eval_fsm st_table current_state  in
 let _ = assign five_minutes T in
 let _ = WashFSM.eval_fsm st_table current_state  in
 let _ = WashFSM.get_inputs st_table in
+let outs = WashFSM.get_outputs st_table in
 
 print_endline ( WashFSM.enum_states) ;; 
 
