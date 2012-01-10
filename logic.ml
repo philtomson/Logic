@@ -16,11 +16,11 @@
       [] -> (Printf.printf "\n"); []
     | x::xs -> (Printf.printf "%s " (b_to_s x)); print_bool_lst xs ;;
 
-  type variable = { name: string; mutable value: boolean } deriving (Show)
-  type  bexp = Const of boolean 
-    |  Var of variable
-    |  Bop of bop * bexp * bexp
-    |  Not of bexp
+  type 'a variable = { name: string; mutable value: 'a } deriving (Show)
+  type 'a bexp = Const of 'a
+    |  Var of 'a variable
+    |  Bop of bop * 'a bexp * 'a bexp
+    |  Not of 'a bexp
   and bop = And | Or | Xor 
     ;;
 
@@ -236,10 +236,10 @@ let uop_to_s op = match op with
    NEG -> "NEG "
  | P_I -> "PrimaryInput " ;;
 
-type unary_op  = uop * ( bexp -> bexp ) ;;
-type binary_op = bop * ( bexp -> bexp -> bexp) ;;
-type any_arity_func = UnaryFunc of unary_op  | 
-                      BinaryFunc of binary_op ;;
+type 'a unary_op  = uop * ( 'a bexp -> 'a bexp ) ;;
+type 'a binary_op = bop * ( 'a bexp -> 'a bexp -> 'a bexp) ;;
+type 'a any_arity_func = UnaryFunc of 'a unary_op  | 
+                      BinaryFunc of 'a binary_op ;;
 (*
 type unary_func = (bexp -> bexp ) ;;
 type binary_func = (bexp->bexp->bexp) ;;
@@ -261,7 +261,7 @@ let decon_op op = match op with
     BinaryFunc(AND
  *)
 
-let operations = unary_operations @ binary_operations;;
+let operations : boolean any_arity_func list = unary_operations @ binary_operations;;
                       
 let rec choose_rand_op _ = 
   List.nth operations (Random.int (List.length operations ))  ;;

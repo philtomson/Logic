@@ -202,8 +202,8 @@ module WashStates =
 
 module LogicExp = 
   struct
-    type t     = Logic.bexp
-    type var_t = Logic.variable
+    type t     = boolean Logic.bexp
+    type var_t = boolean Logic.variable
 
     let eval_exp exp = Logic.to_bool (Logic.eval exp)
 
@@ -264,8 +264,18 @@ let current_state = WashFSM.eval_fsm st_table current_state  in
 let current_state = WashFSM.eval_fsm st_table current_state  in
 let _ = assign five_minutes T in
 let _ = WashFSM.eval_fsm st_table current_state  in
-let _ = WashFSM.get_inputs st_table in
+let ins = WashFSM.get_inputs st_table in
 let outs = WashFSM.get_outputs st_table in
+let inouts = WashFSM.get_inouts st_table in
+let _ = Printf.printf "\ninputs: %s\n" (String.concat ", " 
+                                       (List.map (fun x ->
+                                                      (x.name)) ins)) in
+let _ = Printf.printf "outputs: %s\n" (String.concat ", " 
+                                       (List.map (fun x ->
+                                                      (x.name)) outs)) in
+let _ = Printf.printf "inouts: %s\n\n" (String.concat ", " 
+                                       (List.map (fun x ->
+                                                      (x.name)) inouts)) in
 
 print_endline ( WashFSM.enum_states) ;; 
 

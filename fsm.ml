@@ -105,7 +105,6 @@ module FSM (States : STATES)(Exp : EXPRESSION)(*(CodeGen : CODEGENERATOR)*)  =
       List.fold_left (fun res e ->
                         if List.mem e res then res
                         else (
-                           Printf.printf "input: %s\n" e.name;
                            e::res
                         )
                       ) [] inputs 
@@ -126,12 +125,25 @@ module FSM (States : STATES)(Exp : EXPRESSION)(*(CodeGen : CODEGENERATOR)*)  =
         List.fold_left (fun res e ->
                           if List.mem e res then res
                           else (
-                             Printf.printf "output: %s\n" e.name;
                              e::res
                           )
                         ) []  outputs
 
-    (*let both stab  *)
+
+
+    let intersection a b = 
+      let lst1, lst2 = if (List.length a) > (List.length b) then (a,b)
+                       else (b,a) in
+      let rec aux a b accum = match a with
+        []    -> accum
+      | x::xs -> if (List.mem x b) then aux xs b (x::accum) 
+                 else                   aux xs b accum     in
+      aux lst1 lst2 [] 
+
+                                
+    let get_inouts stab = 
+      let intrs = intersection  (get_inputs stab) (get_outputs stab) in
+      intrs
 
       
 
