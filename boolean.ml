@@ -1,6 +1,6 @@
 exception SizeMismatch ;;
-type boolean = T | F | Vec of boolean array ;;
-(*deriving(Show,Enum);;*)
+type boolean = T | F | Vec of boolean array 
+(*     deriving(Show,Enum);; *)
 
 
 (*type variable = Name of string | NameVal of string*boolean ;;*)

@@ -1,25 +1,7 @@
   exception VarNotDefined ;;
   exception NotAVariable ;;
   open Boolean;;
-  (*
-  type boolean = T | F deriving(Show,Enum);;
-  *)
-  (*type variable = Name of string | NameVal of string*boolean ;;*)
   type 'a optional  = Some of 'a | None ;;
-
-  (*
-  let to_bool v = match v with 
-      T -> true
-    | F -> false ;;
-
-  let b_to_s v = match v with
-      T  -> "T"
-    | F  -> "F" ;;
-
-  let rec print_bool_lst lst = match lst with 
-      [] -> (Printf.printf "\n"); []
-    | x::xs -> (Printf.printf "%s " (b_to_s x)); print_bool_lst xs ;;
-  *)
 
   type 'a variable = { name: string; mutable value: 'a } deriving (Show)
   type 'a bexp = Const of 'a
@@ -33,23 +15,6 @@
     Var(v) -> (if (v.value = F) then "!" else "") ^ v.name 
   | _ -> raise NotAVariable ;;
     
-  (*
-  let and_ x y = match x,y with
-      (T,T) -> T
-    | _     -> F;;
-
-  let or_ x y = match x,y with
-      (_,T) | (T,_) -> T
-    | _             -> F ;;
-
-  let n x = match x with
-      T -> F
-    | F -> T ;;
-
-  let xor x y = match x,y with
-      (T, F) | (F, T) -> T
-    | _ -> F;;
-  *)
 
   let bop_to_func op = match op with
     | And -> and_
@@ -96,8 +61,6 @@
     | Bop(_ as op, Var x, y)       -> Bop(op, Var x, reduce y)
     | Bop(_ as op, x, Var y)       -> Bop(op, reduce x, Var y)
     | Bop(_ as op, x,y)            -> (reduce (Bop(op, reduce x,reduce y)))
-    | _                      -> exp (* TODO: handle Vec? *)
-      ;;
 
   let rec demorganize exp = match exp with 
     | Bop(And, Not x, Not y)   -> Not(Bop(Or,  x, y)) 
@@ -230,10 +193,6 @@ let do_bin_with_prob f e1 e2 exp prob = if (Random.float 1.0) < prob then
 
 let num_ops = 3 ;;
 
-(*
-type bop = AND | OR | XOR  ;; (*P_I = Primary Input *)
-*)
-
 let bop_to_s op = match op with 
     And -> "AND "
   | Or  -> "OR"
@@ -301,15 +260,6 @@ let grow_rand_tree height inputs =
          | BinaryFunc(op,func) ->  func (grow_tree (h-1)) (grow_tree (h-1)) in
    grow_tree height ;;
 
-(*
-  let rec eval exp env = match exp with
-      Const x     -> x
-    | And( x,y)   -> ( eval x env) *: ( eval y env) 
-    | Or(x,y)     -> ( eval x env) +: ( eval y env)
-    | Not(x)      -> n (eval x env) 
-    | Xor(x,y)    -> xor (eval x env) (eval y env) 
-    | Var(x)      -> (Hashtbl.find env x)   ;;
-*)
 
 let list_by_pairs lst = 
   let rec list_pairs l = match l with
