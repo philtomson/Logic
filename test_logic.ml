@@ -1,7 +1,9 @@
+open Boolean;;
 open Logic;;
 open Printf;;
 open OUnit ;;
 open Fsm;;
+
 
 (*
 let x = Var("x", Some(F)) ;;
@@ -205,9 +207,9 @@ module LogicExp =
     type t     = boolean Logic.bexp
     type var_t = boolean Logic.variable
 
-    let eval_exp exp = Logic.to_bool (Logic.eval exp)
+    let eval_exp exp = to_bool (Logic.eval exp)
 
-    let var_to_s     = Logic.var_to_s
+    let var_to_s     = var_to_s
 
   end
 

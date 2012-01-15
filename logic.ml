@@ -1,9 +1,13 @@
   exception VarNotDefined ;;
   exception NotAVariable ;;
+  open Boolean;;
+  (*
   type boolean = T | F deriving(Show,Enum);;
+  *)
   (*type variable = Name of string | NameVal of string*boolean ;;*)
   type 'a optional  = Some of 'a | None ;;
 
+  (*
   let to_bool v = match v with 
       T -> true
     | F -> false ;;
@@ -15,6 +19,7 @@
   let rec print_bool_lst lst = match lst with 
       [] -> (Printf.printf "\n"); []
     | x::xs -> (Printf.printf "%s " (b_to_s x)); print_bool_lst xs ;;
+  *)
 
   type 'a variable = { name: string; mutable value: 'a } deriving (Show)
   type 'a bexp = Const of 'a
@@ -28,6 +33,7 @@
     Var(v) -> (if (v.value = F) then "!" else "") ^ v.name 
   | _ -> raise NotAVariable ;;
     
+  (*
   let and_ x y = match x,y with
       (T,T) -> T
     | _     -> F;;
@@ -43,6 +49,7 @@
   let xor x y = match x,y with
       (T, F) | (F, T) -> T
     | _ -> F;;
+  *)
 
   let bop_to_func op = match op with
     | And -> and_
@@ -89,6 +96,7 @@
     | Bop(_ as op, Var x, y)       -> Bop(op, Var x, reduce y)
     | Bop(_ as op, x, Var y)       -> Bop(op, reduce x, Var y)
     | Bop(_ as op, x,y)            -> (reduce (Bop(op, reduce x,reduce y)))
+    | _                      -> exp (* TODO: handle Vec? *)
       ;;
 
   let rec demorganize exp = match exp with 
