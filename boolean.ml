@@ -1,5 +1,5 @@
 exception SizeMismatch ;;
-type boolean = T | F | Vec of boolean array 
+type boolean = T | F | Vec of boolean array ;;
 (*     deriving(Show,Enum);; *)
 
 (*
@@ -25,16 +25,34 @@ let int_to_barray num bits =
 
 (*convert a boolean array to an integer*)
 let barray_to_int ba = 
-  let rec aux idx num = if (idx=(Array.length ba)) then
-                          num
-                        else
-                          if ba.(idx) = T then
-                            aux (idx+1) 
-                                num+(int_of_float(2.0**(float_of_int idx)))
-                          else
-                            aux (idx+1) num
-                        in
+  let rec aux idx num = 
+    if (idx=(Array.length ba)) then
+      num
+    else
+      if ba.(idx) = T then
+        aux (idx+1) 
+            num+(int_of_float(2.0**(float_of_int idx)))
+      else
+        aux (idx+1) num
+    in
   aux 0 0;;
+
+
+let rel op x y = match x,y with
+    (Vec(a), Vec(b)) -> (op (barray_to_int a) (barray_to_int b))
+  | (Vec(a), T ) -> (op (barray_to_int a)  1)
+  | (Vec(a), F ) -> (op (barray_to_int a)  0)
+  | (T, Vec(b) ) -> (op 1  (barray_to_int b))
+  | (F, Vec(b) ) -> (op 0  (barray_to_int b))
+  | (T, F)       -> true
+  | (F, T)       -> false
+  | _            -> false ;;
+
+let ( >? ) x y = rel ( > ) x y ;;
+let ( <? ) x y = rel ( < ) x y ;;
+let ( >=? ) x y = rel ( >= ) x y ;;
+let ( <=? ) x y = rel ( <= ) x y ;;
+
 
 
 (*type variable = Name of string | NameVal of string*boolean ;;*)
