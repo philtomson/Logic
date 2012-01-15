@@ -2,6 +2,40 @@ exception SizeMismatch ;;
 type boolean = T | F | Vec of boolean array 
 (*     deriving(Show,Enum);; *)
 
+(*
+let rec int_to_bool n acc = if n=0 then
+                              acc
+                            else 
+                              int_to_bool (n lsr 1) ((n mod 2)::acc) ;;
+*)
+
+(*convert an integer to a boolean array*)
+(*NOTE: we don't handled signed integers at this point*)
+let int_to_barray num bits = 
+  let rec aux n idx acc =
+  if (idx=bits) then
+    acc
+  else 
+  (
+    (Array.set acc idx (if (n mod 2) = 0 then F
+                        else T ));
+    aux (n lsr 1) (idx+1) acc  
+  ) in
+  aux num 0 (Array.make bits F);;
+
+(*convert a boolean array to an integer*)
+let barray_to_int ba = 
+  let rec aux idx num = if (idx=(Array.length ba)) then
+                          num
+                        else
+                          if ba.(idx) = T then
+                            aux (idx+1) 
+                                num+(int_of_float(2.0**(float_of_int idx)))
+                          else
+                            aux (idx+1) num
+                        in
+  aux 0 0;;
+
 
 (*type variable = Name of string | NameVal of string*boolean ;;*)
 let to_bool v = match v with 
@@ -12,7 +46,7 @@ let to_bool v = match v with
 let rec b_to_s v = match v with
     T        -> "T"
   | F        -> "F" 
-  | Vec(ary) -> (Array.fold_left (fun acc e -> acc^(b_to_s e)) "[" ary)^"]";;
+  | Vec(ary) -> "["^(Array.fold_left (fun acc e -> (b_to_s e)^acc) "" ary)^"]";;
 
 let rec print_bool_lst lst = match lst with 
     [] -> (Printf.printf "\n"); []
