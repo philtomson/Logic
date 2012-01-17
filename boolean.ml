@@ -21,7 +21,7 @@ let int_to_barray num bits =
                         else T ));
     aux (n lsr 1) (idx+1) acc  
   ) in
-  aux num 0 (Array.make bits F);;
+  (aux num 0 (Array.make bits F));;
 
 (*convert a boolean array to an integer*)
 let barray_to_int ba = 
@@ -36,6 +36,21 @@ let barray_to_int ba =
         aux (idx+1) num
     in
   aux 0 0;;
+
+(* int to boolean *)
+let int_to_b n bits = 
+  if bits > 1 then 
+    Vec(int_to_barray n bits)
+  else 
+    if n = 1 then T
+    else F
+    
+(* boolen to int *)
+let b_to_int v = match v with
+    T -> 1 
+  | F -> 0
+  | Vec(x) -> barray_to_int x ;;
+    
 
 
 let rel op x y = match x,y with
@@ -54,6 +69,15 @@ let ( >=? ) x y = rel ( >= ) x y ;;
 let ( <=? ) x y = rel ( <= ) x y ;;
 
 
+let increment b = match b with
+    T -> F
+  | F -> T
+  | Vec a -> Vec( int_to_barray ((barray_to_int a)+1) (Array.length a )) ;;
+
+let decrement b = match b with
+    T -> F
+  | F -> T
+  | Vec a -> Vec( int_to_barray ((barray_to_int a)-1) (Array.length a )) ;;
 
 (*type variable = Name of string | NameVal of string*boolean ;;*)
 let to_bool v = match v with 
