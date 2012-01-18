@@ -9,6 +9,10 @@ let rec int_to_bool n acc = if n=0 then
                               int_to_bool (n lsr 1) ((n mod 2)::acc) ;;
 *)
 
+let width b = match b with
+    T | F -> 1
+  | Vec v -> Array.length v 
+
 (*convert an integer to a boolean array*)
 (*NOTE: we don't handled signed integers at this point*)
 let int_to_barray num bits = 

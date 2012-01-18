@@ -278,6 +278,7 @@ let _ = Printf.printf "outputs: %s\n" (String.concat ", "
 let _ = Printf.printf "inouts: %s\n\n" (String.concat ", " 
                                        (List.map (fun x ->
                                                       (x.name)) inouts)) in
+let _ = print_endline (WashFSM.to_code  st_table) in
 
 print_endline ( WashFSM.enum_states) ;; 
 

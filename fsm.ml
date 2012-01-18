@@ -1,4 +1,5 @@
 open Logic
+open Vhdl
 
 
 type ('pred, 'ns, 'exp, 'btype) p_a_n = { pred: 'pred; 
@@ -122,12 +123,12 @@ module FSM (States : STATES)(Exp : EXPRESSION)(*(CodeGen : CODEGENERATOR)*)  =
         aux action_list [] in
 
 
-        List.fold_left (fun res e ->
-                          if List.mem e res then res
-                          else (
-                             e::res
-                          )
-                        ) []  outputs
+      List.fold_left (fun res e ->
+                        if List.mem e res then res
+                        else (
+                           e::res
+                        )
+                      ) []  outputs
 
 
 
@@ -147,15 +148,24 @@ module FSM (States : STATES)(Exp : EXPRESSION)(*(CodeGen : CODEGENERATOR)*)  =
 
       
 
-(*
+
     let to_code stab = 
       (* first analyze predicates to determine inputs*)
-      let input_list = 
-      
-      (* 2nd analyze actions to determine ouputs - easier*)
-      (* 3rd find the intersection between the two lists to 
-       * determine inouts *)
-*)
+      let input_list = get_inputs   stab in
+      let output_list = get_outputs stab in
+      let get_inouts  = get_inouts  stab in
+      let out_str =  
+        "Entity FSM is \n  
+           port(\n" ^ 
+         String.concat ";\n" (List.map (fun i ->
+                   let name = i.name in
+                   let v    = i.value in
+                   "\t\t"^(port name (Boolean.width v) "in" )
+                   )
+                   input_list) ^ ");"  in
+      out_str
+            
+
 
   end 
 
