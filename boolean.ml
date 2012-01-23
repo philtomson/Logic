@@ -1,5 +1,9 @@
 exception SizeMismatch ;;
-type boolean = T | F | Vec of boolean array ;;
+
+let log_base_int a b = int_of_float ( (log (float_of_int  a)) /. 
+                                      (log (float_of_int b))     )
+
+type boolean = T | F | Vec of boolean array ;;(*| Int of int;;*)
 (*     deriving(Show,Enum);; *)
 
 (*
@@ -8,10 +12,6 @@ let rec int_to_bool n acc = if n=0 then
                             else 
                               int_to_bool (n lsr 1) ((n mod 2)::acc) ;;
 *)
-
-let width b = match b with
-    T | F -> 1
-  | Vec v -> Array.length v 
 
 (*convert an integer to a boolean array*)
 (*NOTE: we don't handled signed integers at this point*)
@@ -55,6 +55,9 @@ let b_to_int v = match v with
   | F -> 0
   | Vec(x) -> barray_to_int x ;;
     
+let width b = match b with
+    T | F -> 1
+  | Vec v -> Array.length v 
 
 
 let rel op x y = match x,y with
@@ -97,6 +100,20 @@ let rec b_to_s v = match v with
 let rec print_bool_lst lst = match lst with 
     [] -> (Printf.printf "\n"); []
   | x::xs -> (Printf.printf "%s " (b_to_s x)); print_bool_lst xs ;;
+
+let rec shiftr n by = match n with
+    T | F   -> F
+  | Vec ary -> 
+      let len    = Array.length ary in
+      let outary = Array.make len F in
+      Array.blit ary by outary 0 (len-by); Vec(outary);;
+
+let rec shiftl n by = match n with
+    T | F   -> F
+  | Vec ary -> 
+      let len    = Array.length ary in
+      let outary = Array.make len F in
+      Array.blit ary 0 outary by (len-by); Vec(outary);;
 
 let rec and_ x y = match x,y with
     (T,T)             -> T
