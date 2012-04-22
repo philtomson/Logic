@@ -1,4 +1,4 @@
-open Logic
+(*open Logic*)
 open Vhdl
 
 
@@ -17,28 +17,33 @@ type ('pred, 'ns, 'exp, 'btype) p_a_n = { pred: 'pred;
 
 module type EXPRESSION = 
   sig
-    type t
-    type var_t
-    val eval_exp : t -> bool
-
-    val var_to_s : t -> string
+    type b
+    type 'a var_t
+    type 'a bexp
+    val eval_exp   :  b bexp -> bool
+    val assign     : 'a bexp -> 'a -> unit
+    val get_inputs : 'a bexp -> 'a bexp list 
+    val var_to_s   : b bexp -> string
+    val var_name   : 'a var_t -> string
+    val var_val    : 'a var_t -> 'a
+    val get_var    : 'a bexp -> 'a var_t option
   end
-
+ 
 (*
 module type CODEGENERATOR = 
   sig
     type t 
-    val to_string : t -> string
+    val to_code : t -> string
   end
 *)
 
 module FSM (States : STATES)(Exp : EXPRESSION)(*(CodeGen : CODEGENERATOR)*)  =
   struct 
-    type t = States.t
     let start_state = States.start_state
-
-    type vt      = Exp.var_t
     let eval_exp = Exp.eval_exp
+    let assign      = Exp.assign
+    let var_to_s    = Exp.var_to_s
+    let get_var     = Exp.get_var
 
     let enum_states = 
       let enum_types = Enum.enum_from<States.t> (Enum.to_enum<States.t> 0) in
@@ -77,7 +82,7 @@ module FSM (States : STATES)(Exp : EXPRESSION)(*(CodeGen : CODEGENERATOR)*)  =
                    List.iter (fun (var, value) -> assign var value) x.actions;
                    Printf.printf "current state: %s  \tactions: %s \n" (state_to_s x.ns) (String.concat ", " 
                    (List.map (fun (var, value) ->
-                      ( var_to_s var) ) x.actions ) );
+                         var_to_s var ) (x.actions ) ) );
                    Some x.ns
                  )
                  else 
@@ -92,14 +97,18 @@ module FSM (States : STATES)(Exp : EXPRESSION)(*(CodeGen : CODEGENERATOR)*)  =
     let get_inputs stab = 
 
       let pred_list = List.flatten(ST_Table.fold ( fun _ v lst -> 
-        (get_inputs v.pred)::lst) stab []) in
+        (Exp.get_inputs v.pred)::lst) stab []) in
 
+      (*Collect inputs TODO: can be done in Logic?*)
       let inputs = 
         let rec aux inlst aclst = match inlst with
           []    -> aclst
-        | e::es -> match e with 
+        | e::es -> match (get_var e) with 
+                     Some n -> aux es (n::aclst)
+                   | None      -> aux es aclst  in
+        (*was:| e::es -> match e with 
                      Var(n) -> aux es (n::aclst)
-                   | _      -> aux es aclst  in
+                   | _      -> aux es aclst  in *)
         aux pred_list [] in  
 
       (*uniqify list*)
@@ -118,8 +127,11 @@ module FSM (States : STATES)(Exp : EXPRESSION)(*(CodeGen : CODEGENERATOR)*)  =
       let outputs = 
         let rec aux outlst aclst = match outlst with
           []                -> aclst
-        | (Var(out),_)::es  -> aux es (out::aclst) 
-        | _::es             -> aux es aclst in
+        | (e,_)::es  -> ( match (get_var e) with 
+                            Some n -> aux es (n::aclst) 
+                          | None   -> aux es aclst 
+                        )
+        | _::es      -> aux es aclst in
         aux action_list [] in
 
 
@@ -151,15 +163,15 @@ module FSM (States : STATES)(Exp : EXPRESSION)(*(CodeGen : CODEGENERATOR)*)  =
 
     let to_code stab = 
       (* first analyze predicates to determine inputs*)
-      let input_list = get_inputs   stab in
+      let input_list  = get_inputs  stab in
       let output_list = get_outputs stab in
       let get_inouts  = get_inouts  stab in
       let out_str =  
         "Entity FSM is \n  
            port(\n" ^ 
          String.concat ";\n" (List.map (fun i ->
-                   let name = i.name in
-                   let v    = i.value in
+                   let name = Exp.var_name i in
+                   let v    = Exp.var_val i in
                    "\t\t"^(port name (Boolean.width v) "in" )
                    )
                    input_list) ^ ");"  in

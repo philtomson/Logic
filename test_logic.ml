@@ -204,13 +204,24 @@ module WashStates =
 
 module LogicExp = 
   struct
-    type t     = boolean Logic.bexp
-    type var_t = boolean Logic.variable
+    type b = Boolean.boolean
+    include Logic
+    (*
+    type 'a var_t (*= boolean Logic.variable*)
+    type 'a bexp     (*= boolean Logic.bexp*)
 
+    let assign       = Logic.assign
+    let get_inputs   = Logic.get_inputs
+    *)
     let eval_exp exp = to_bool (Logic.eval exp)
+    (*let get_outputs  = Logic.get_outputs*)
+(*
+    let var_to_s     = Logic.var_to_s
+    let var_name     = Logic.var_name
+    let var_val      = Logic.var_val
 
-    let var_to_s     = var_to_s
-
+    let get_var      = Logic.get_var
+    *)
   end
 
 

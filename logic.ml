@@ -1,15 +1,18 @@
   exception VarNotDefined ;;
   exception NotAVariable ;;
   open Boolean;;
-  type 'a optional  = Some of 'a | None ;;
 
-  type 'a variable = { name: string; mutable value: 'a } deriving (Show)
+  type 'a var_t = { name: string; mutable value: 'a } deriving (Show)
   type 'a bexp = Const of 'a
-    |  Var of 'a variable
+    |  Var of 'a var_t
     |  Bop of bop * 'a bexp * 'a bexp
     |  Not of 'a bexp
   and bop = And | Or | Xor 
     ;;
+
+  let var_name v = v.name;;
+
+  let var_val  v = v.value;;
 
   let var_to_s var = match var with
     Var(v) -> (if (v.value = F) then "!" else "") ^ v.name 
@@ -75,18 +78,22 @@
     | _ -> raise NotAVariable ;;
 
 
-
   let rec eval exp  = match exp with
       Const x     -> x
     | Bop(op,x,y) -> (bop_to_func op) ( eval x ) ( eval y ) 
     | Not(x)      -> n (eval x ) 
     | Var(x)      -> x.value ;;
 
+
   let rec get_inputs exp = match exp with 
       Const x     -> []
     | Var x       -> [exp]
     | Bop(_, x,y) -> (get_inputs x) @ (get_inputs y)
     | Not x       -> get_inputs x ;;
+
+  let get_var exp = match exp with
+      Var x       -> Some x
+    | _           -> None
 
   let rec literal_count exp = 
     let rec count_literals exp' lc = match exp' with

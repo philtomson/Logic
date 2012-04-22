@@ -15,7 +15,6 @@ let split s ch =
   try
     go s
   with Not_found -> !x
-                                                                                                                                                                                                                                             
 let split_nl s = split s '\n'
 
 let before_space s =
