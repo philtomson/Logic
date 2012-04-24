@@ -1,0 +1,6 @@
+name="Logic"
+description="Logic functions"
+version="0.1"
+depends="unix,oUnit,deriving-ocsigen,deriving-ocsigen.syntax"
+archive(byte)="logic.cmo"
+archive(native)="logic.cmx"
