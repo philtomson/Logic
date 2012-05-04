@@ -1,0 +1,1 @@
+ocamlfind install logic META _build/logic.cmo _build/boolean.cmo _build/logic.cmx _build/boolean.cmx _build/logic.o logic.mli boolean.mli 
